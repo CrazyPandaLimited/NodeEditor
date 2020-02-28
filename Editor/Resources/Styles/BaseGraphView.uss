@@ -1,0 +1,15 @@
+GridBackground {
+    --spacing: 16;
+    --thick-lines: 10;
+    --line-color: #333333;
+    --thick-line-color: #555555;
+}
+
+#GraphTypeLabel {
+    position: absolute;
+    font-style: bold;
+    margin: 12 0 0 12;
+    color: #444;
+    opacity: 0.6;
+    font-size: 36;
+}

@@ -1,0 +1,48 @@
+#properties-view Label.unity-base-field__label {
+    min-width: 115;
+}
+
+#properties-view CollectionField .unity-foldout Label.unity-base-field__label {
+    min-width: 20;
+}
+
+#properties-view Button {
+    padding: 0;
+    margin: 1;
+}
+
+#properties-view {
+    padding: 4;
+}
+
+#properties-view .unity-text-element, #properties-view .unity-base-field__input {
+    font-size: 12;
+}
+
+#node-border #contents {
+    background-color: #424242;
+    max-width: 270;
+    min-width: 140;
+}
+
+#properties-toggle {
+    width: 56;
+    height: 16;
+    align-self: flex-start;
+    flex-direction: row;
+    justify-content: center;    
+}
+
+#properties-toggle:hover {
+    background-color: #2B2B2B;
+}
+
+#properties-toggle > #icon {
+    background-image: resource("Icons/PreviewExpand");
+    width: 16px;
+    height: 16px;
+}
+
+#properties-toggle.expanded > #icon  {
+    background-image: resource("Icons/PreviewCollapse");
+}
