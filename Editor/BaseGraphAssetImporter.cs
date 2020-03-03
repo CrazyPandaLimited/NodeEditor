@@ -21,7 +21,7 @@ namespace CrazyPanda.UnityCore.NodeEditor
         {
             var textGraph = File.ReadAllText( ctx.assetPath, Encoding.UTF8 );
 
-            var graph = SerializationHelper.DeserializeGraph( textGraph );
+            var graph = GraphSerializer.Deserialize( textGraph );
 
             var graphAsset = ScriptableObject.CreateInstance<GraphAsset>();
             graphAsset.Graph = graph;
@@ -44,7 +44,7 @@ namespace CrazyPanda.UnityCore.NodeEditor
 
             public override void Action( int instanceId, string pathName, string resourceFile )
             {
-                File.WriteAllText( pathName, SerializationHelper.SerializeGraph( Graph ) );
+                File.WriteAllText( pathName, GraphSerializer.Serialize( Graph ) );
                 AssetDatabase.Refresh();
 
                 UnityEngine.Object obj = AssetDatabase.LoadAssetAtPath<GraphAsset>( pathName );

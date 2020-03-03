@@ -20,6 +20,11 @@ namespace CrazyPanda.UnityCore.NodeEditor
                 return null;
         }
 
+        public static PortModel Port( this NodeModel node, string id )
+        {
+            return node.Ports.FirstOrDefault( p => p.Id == id );
+        }
+
         public static IEnumerable<PortModel> InputPorts( this NodeModel node )
         {
             return node.Ports.Where( p => p.Direction == PortDirection.Input );

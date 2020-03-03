@@ -54,6 +54,8 @@ namespace CrazyPanda.UnityCore.NodeEditor
             set => this.SetOnce( ref _node, value );
         }
 
-        public ICollection<ConnectionModel> Connections { get; } = new List<ConnectionModel>();
+        public IList<ConnectionModel> Connections { get; } = new List<ConnectionModel>();
+
+        public override string ToString() => $"Port: {Id} ({Type.Name})";
     }
 }

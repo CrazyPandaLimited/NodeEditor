@@ -9,39 +9,11 @@ using UnityEngine;
 
 namespace CrazyPanda.UnityCore.NodeEditor
 {
-    static class SerializationHelper
+    static class GraphSerializer
     {
-        [Serializable]
-        public class SGraph
-        {
-            public string Type;
+        private static DefaultTypeResolver _staticResolver = new DefaultTypeResolver();
 
-            public List<SNode> Nodes = new List<SNode>();
-            public List<SConnection> Connections = new List<SConnection>();
-        }
-
-        [Serializable]
-        public class SNode
-        {
-            public string Type;
-
-            public string Id;
-            public Vector2 Position = default;
-
-            public string Properties;
-        }
-
-        [Serializable]
-        public class SConnection
-        {
-            public string FromNodeId;
-            public string FromPortId;
-
-            public string ToNodeId;
-            public string ToPortId;
-        }
-
-        public static string SerializeGraph( GraphModel graph )
+        public static string Serialize( GraphModel graph )
         {
             var sgraph = new SGraph();
             sgraph.Type = graph.Type.GetType().FullName;
@@ -72,9 +44,9 @@ namespace CrazyPanda.UnityCore.NodeEditor
             return JsonUtility.ToJson( sgraph, true );
         }
 
-        public static GraphModel DeserializeGraph( string data, List<SConnection> brokenConnections = null )
+        public static GraphModel Deserialize( string data, List<SConnection> brokenConnections = null )
         {
-            var resolver = new DefaultTypeResolver();
+            var resolver = _staticResolver;
 
             var sgraph = JsonUtility.FromJson<SGraph>( data );
             var gtype = FindType( sgraph.Type ) ?? throw new InvalidOperationException( $"Graph type {sgraph.Type ?? "<null>"} not found!" );
@@ -140,6 +112,36 @@ namespace CrazyPanda.UnityCore.NodeEditor
             }
 
             return null;
+        }
+
+        [Serializable]
+        public class SGraph
+        {
+            public string Type;
+
+            public List<SNode> Nodes = new List<SNode>();
+            public List<SConnection> Connections = new List<SConnection>();
+        }
+
+        [Serializable]
+        public class SNode
+        {
+            public string Type;
+
+            public string Id;
+            public Vector2 Position = default;
+
+            public string Properties;
+        }
+
+        [Serializable]
+        public class SConnection
+        {
+            public string FromNodeId;
+            public string FromPortId;
+
+            public string ToNodeId;
+            public string ToPortId;
         }
     }
 }

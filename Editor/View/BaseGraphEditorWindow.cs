@@ -42,7 +42,7 @@ namespace CrazyPanda.UnityCore.NodeEditor
             var path = AssetDatabase.GUIDToAssetPath( _graphAssetGuid );
             var textGraph = File.ReadAllText( path, Encoding.UTF8 );
 
-            _graph = SerializationHelper.DeserializeGraph( textGraph );
+            _graph = GraphSerializer.Deserialize( textGraph );
             _graphEditorView.Graph = _graph;
 
             titleContent = new GUIContent( Path.GetFileNameWithoutExtension( path ) );
@@ -56,7 +56,7 @@ namespace CrazyPanda.UnityCore.NodeEditor
 
                 if( !string.IsNullOrEmpty( path ) )
                 {
-                    File.WriteAllText( path, SerializationHelper.SerializeGraph( _graph ) );
+                    File.WriteAllText( path, GraphSerializer.Serialize( _graph ) );
                 }
             }
         }

@@ -12,7 +12,7 @@ namespace CrazyPanda.UnityCore.NodeEditor
 
         public IConnectionType FindConnectionType( Type from, Type to )
         {
-            if( from != to )
+            if( !to.IsAssignableFrom( from ) )
                 return null;
 
             return _defaultConnectionType;

@@ -18,7 +18,7 @@ namespace CrazyPanda.UnityCore.NodeEditor
         {
             if( Graph != null )
             {
-                _serializedGraph = SerializationHelper.SerializeGraph( Graph );
+                _serializedGraph = GraphSerializer.Serialize( Graph );
             }
         }
 
@@ -26,7 +26,7 @@ namespace CrazyPanda.UnityCore.NodeEditor
         {
             if( !string.IsNullOrEmpty( _serializedGraph ) )
             {
-                Graph = SerializationHelper.DeserializeGraph( _serializedGraph );
+                Graph = GraphSerializer.Deserialize( _serializedGraph );
             }
         }
     }
