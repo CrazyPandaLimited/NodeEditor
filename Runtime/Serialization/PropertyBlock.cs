@@ -7,7 +7,6 @@ using UnityEngine;
 
 namespace CrazyPanda.UnityCore.NodeEditor
 {
-    [Serializable]
     public class PropertyBlock
     {
     }

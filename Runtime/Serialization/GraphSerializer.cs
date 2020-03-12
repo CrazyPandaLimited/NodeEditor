@@ -4,6 +4,7 @@ using System.Linq;
 using System.Net.Http;
 using System.Text;
 using System.Threading.Tasks;
+using Newtonsoft.Json;
 using UnityEditor;
 using UnityEngine;
 
@@ -25,7 +26,7 @@ namespace CrazyPanda.UnityCore.NodeEditor
                     Id = node.Id,
                     Type = node.Type.GetType().FullName,
                     Position = node.Position,
-                    Properties = JsonUtility.ToJson( node.PropertyBlock ),
+                    Properties = JsonConvert.SerializeObject( node.PropertyBlock ),
                 } );
             }
 
@@ -41,14 +42,14 @@ namespace CrazyPanda.UnityCore.NodeEditor
                 } );
             }
 
-            return JsonUtility.ToJson( sgraph, true );
+            return JsonConvert.SerializeObject( sgraph, Formatting.Indented );
         }
 
         public static GraphModel Deserialize( string data, List<SConnection> brokenConnections = null )
         {
             var resolver = _staticResolver;
 
-            var sgraph = JsonUtility.FromJson<SGraph>( data );
+            var sgraph = JsonConvert.DeserializeObject<SGraph>( data );
             var gtype = FindType( sgraph.Type ) ?? throw new InvalidOperationException( $"Graph type {sgraph.Type ?? "<null>"} not found!" );
             var graphType = resolver.GetInstance<IGraphType>( gtype );
 
@@ -65,7 +66,7 @@ namespace CrazyPanda.UnityCore.NodeEditor
                     Position = n.Position
                 };
 
-                JsonUtility.FromJsonOverwrite( n.Properties, node.PropertyBlock );
+                JsonConvert.PopulateObject( n.Properties, node.PropertyBlock );
 
                 nodeType.PostLoad( node );
 

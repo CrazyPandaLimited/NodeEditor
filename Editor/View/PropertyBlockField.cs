@@ -12,9 +12,11 @@ using UnityEngine.UIElements;
 
 namespace CrazyPanda.UnityCore.NodeEditor
 {
+    public delegate VisualElement EditorCreator( string label, object initialValue, Action<object> setter );
+
     public class PropertyBlockField : VisualElement
     {
-        private static Dictionary<Type, Func<string, object, Action<object>, VisualElement>> _typeMappings = new Dictionary<Type, Func<string, object, Action<object>, VisualElement>>
+        private static Dictionary<Type, EditorCreator> _typeMappings = new Dictionary<Type, EditorCreator>
         {
             { typeof(string), CreateFieldEditor<TextField, string> },
             { typeof(int), CreateFieldEditor<IntegerField, int> },
@@ -29,9 +31,9 @@ namespace CrazyPanda.UnityCore.NodeEditor
             { typeof(Color), CreateFieldEditor<ColorField, Color> },
         };
 
-        private PropertyBlock _propertyBlock;
+        private object _propertyBlock;
 
-        public PropertyBlock PropertyBlock
+        public object PropertyBlock
         {
             get => _propertyBlock;
             set
@@ -41,12 +43,17 @@ namespace CrazyPanda.UnityCore.NodeEditor
             }
         }
 
+        public event Action<PropertyBlockField> Changed;
+
         public static TEditor AddEditor<TEditor, TValue>( VisualElement parent, string label, TValue value, Action<TValue> setter )
             where TEditor : BaseField<TValue>, new()
         {
-            var ret = new TEditor();
-            ret.label = ObjectNames.NicifyVariableName( label );
-            ret.value = value;
+            var ret = new TEditor
+            {
+                label = ObjectNames.NicifyVariableName( label ),
+                value = value
+            };
+
             ret.RegisterValueChangedCallback( e => setter( e.newValue ) );
             parent.Add( ret );
             return ret;
@@ -63,6 +70,16 @@ namespace CrazyPanda.UnityCore.NodeEditor
                 var popupField = new PopupField<string>( ObjectNames.NicifyVariableName( label ), Enum.GetNames( valueType ).ToList(), value.ToString() );
                 popupField.RegisterValueChangedCallback( v => setter( Enum.Parse( valueType, v.newValue ) ) );
                 return popupField;
+            }
+            else if( !valueType.IsValueType )
+            {
+                var foldout = new Foldout() { text = ObjectNames.NicifyVariableName( label ) };
+                {
+                    var propertyBlockField = new PropertyBlockField() { PropertyBlock = value };
+                    propertyBlockField.Changed += pb => setter( pb.PropertyBlock );
+                    foldout.Add( propertyBlockField );
+                }
+                return foldout;
             }
 
             return null;
@@ -81,18 +98,31 @@ namespace CrazyPanda.UnityCore.NodeEditor
             return ret;
         }
 
+        public static void RegisterEditorMapping( Type type, EditorCreator creator )
+        {
+            if( _typeMappings.ContainsKey( type ) )
+                throw new ArgumentException( $"Editor mapping for type {type.Name} is already registered" );
+
+            _typeMappings[ type ] = creator;
+        }
+
         protected virtual VisualElement ProcessField( FieldInfo field )
         {
             if( typeof( IList ).IsAssignableFrom( field.FieldType ) )
             {
-                var collectionField = new CollectionField();
-                collectionField.PropertyBlock = _propertyBlock;
-                collectionField.Field = field;
+                var collectionField = new CollectionField
+                {
+                    CollectionOwner = _propertyBlock,
+                    Field = field,
+                };
+
+                collectionField.Changed += _ => Changed?.Invoke( this );
+
                 return collectionField;
             }
             else
             {
-                return CreateEditor( field.FieldType, field.Name, field.GetValue( _propertyBlock ), v => field.SetValue( _propertyBlock, v ) );
+                return CreateEditor( field.FieldType, field.Name, field.GetValue( _propertyBlock ), v => { field.SetValue( _propertyBlock, v ); Changed?.Invoke( this ); } );
             }
         }
 

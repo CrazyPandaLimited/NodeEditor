@@ -1,4 +1,5 @@
-﻿using System.Linq;
+﻿using System.Collections.Generic;
+using System.Linq;
 
 namespace CrazyPanda.UnityCore.NodeEditor
 {
@@ -86,9 +87,9 @@ namespace CrazyPanda.UnityCore.NodeEditor
         public T Get( INodeExecutionContext ctx, int connectionIndex ) => ctx.GetInput<T>( ctx.Node.Port( Id ).Connections[ connectionIndex ] );
 
         /// <summary>
-        /// Returns value from single connection. There must be only one connection to this port.
+        /// Returns values from all connections.
         /// </summary>
-        public T Get( INodeExecutionContext ctx ) => ctx.GetInput<T>( ctx.Node.Port( Id ).Connections.Single() );
+        public IEnumerable<T> Get( INodeExecutionContext ctx ) => ctx.Node.Port( Id ).Connections.Select( c => ctx.GetInput<T>( c ) );
 
         /// <summary>
         /// Conversion operator to simplify Id initialization
@@ -127,7 +128,7 @@ namespace CrazyPanda.UnityCore.NodeEditor
         /// <summary>
         /// Conversion operator to simplify Id initialization
         /// </summary>
-        public static implicit operator OutputPort<T>(string id) => new OutputPort<T> { Id = id };
+        public static implicit operator OutputPort<T>( string id ) => new OutputPort<T> { Id = id };
 
         /// <summary>
         /// Conversion operator to simplify Id retrieval
@@ -166,6 +167,6 @@ namespace CrazyPanda.UnityCore.NodeEditor
         /// <summary>
         /// Conversion operator to simplify Id retrieval
         /// </summary>
-        public static implicit operator string ( in OutputPortSingle<T> portDefinition ) => portDefinition.Id;
+        public static implicit operator string( in OutputPortSingle<T> portDefinition ) => portDefinition.Id;
     }
 }

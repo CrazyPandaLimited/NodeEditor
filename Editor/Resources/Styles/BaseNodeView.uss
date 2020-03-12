@@ -1,8 +1,16 @@
 #properties-view Label.unity-base-field__label {
+    min-width: 130;
+}
+
+#properties-view .unity-foldout--depth-0 Label.unity-base-field__label {
     min-width: 115;
 }
 
-#properties-view CollectionField .unity-foldout Label.unity-base-field__label {
+#properties-view .unity-foldout--depth-1 Label.unity-base-field__label {
+    min-width: 100;
+}
+
+#properties-view #collection-row > .unity-base-field Label.unity-base-field__label {
     min-width: 20;
 }
 
@@ -16,12 +24,20 @@
 }
 
 #properties-view .unity-text-element, #properties-view .unity-base-field__input {
-    font-size: 12;
+    font-size: 12;    
+}
+
+#properties-view .unity-base-field .unity-base-field__input {
+    min-width: 120;
+}
+
+#properties-view .unity-base-field {
+    margin-bottom: 5;
 }
 
 #node-border #contents {
-    background-color: #424242;
-    max-width: 270;
+    background-color: #363636;
+    max-width: 500;
     min-width: 140;
 }
 

@@ -15,7 +15,7 @@ namespace CrazyPanda.UnityCore.NodeEditor
 
         public void InitModel( NodeModel node )
         {
-            node.PropertyBlock = CreatePropertyBlock();
+            node.PropertyBlock = CreatePropertyBlock( node );
         }
 
         public void PostLoad( NodeModel node )
@@ -23,29 +23,25 @@ namespace CrazyPanda.UnityCore.NodeEditor
             if( node.Id == null )
                 node.Id = Guid.NewGuid().ToString();
 
-            node.Ports = CreatePorts();
+            CreatePorts( node );
         }
 
-        protected virtual IReadOnlyList<PortModel> CreatePorts()
+        protected virtual void CreatePorts( NodeModel node )
         {
-            if(_collectedPorts == null)
+            if( _collectedPorts == null )
                 CollectPortsFromProperties();
 
             if( _collectedPorts.Count == 0 )
-                return _emptyPorts;
-
-            var ret = new PortModel[ _collectedPorts.Count ];
+                return;
 
             for( int i = 0; i < _collectedPorts.Count; i++ )
             {
                 var desc = _collectedPorts[ i ];
-                ret[ i ] = CreatePort( desc.Id, desc.Type, desc.Direction, desc.Capacity );
+                node.AddPort( CreatePort( desc.Id, desc.Type, desc.Direction, desc.Capacity ) );
             }
-
-            return ret;
         }
 
-        protected virtual PropertyBlock CreatePropertyBlock()
+        protected virtual PropertyBlock CreatePropertyBlock( NodeModel node )
         {
             return new PropertyBlock();
         }
@@ -57,15 +53,16 @@ namespace CrazyPanda.UnityCore.NodeEditor
 
         protected static PortModel CreatePort( string id, Type type, PortDirection direction, PortCapacity capacity = PortCapacity.NotSet )
         {
-            var ret = new PortModel() { Type = type };
-            ret.Direction = direction;
-            ret.Id = id;
-
             if( capacity == PortCapacity.NotSet )
             {
                 // by default input ports are single, output ports are multiple
-                ret.Capacity = direction == PortDirection.Input ? PortCapacity.Single : PortCapacity.Multiple;
+                capacity = direction == PortDirection.Input ? PortCapacity.Single : PortCapacity.Multiple;
             }
+
+            var ret = new PortModel() { Type = type };
+            ret.Direction = direction;
+            ret.Id = id;
+            ret.Capacity = capacity;
 
             return ret;
         }
@@ -102,7 +99,7 @@ namespace CrazyPanda.UnityCore.NodeEditor
                 else if( fieldType.GetGenericTypeDefinition() == typeof( InputPortMulti<> ) )
                 {
                     desc.Type = fieldType.GetGenericArguments()[ 0 ];
-                    desc.Direction = PortDirection.Output;
+                    desc.Direction = PortDirection.Input;
                     desc.Capacity = PortCapacity.Multiple;
                 }
                 else if( fieldType.GetGenericTypeDefinition() == typeof( OutputPort<> ) )
@@ -124,7 +121,7 @@ namespace CrazyPanda.UnityCore.NodeEditor
                     var idField = fieldType.GetField( "Id" );
 
                     desc.Id = idField.GetValue( value ) as string;
-                    
+
                     if( string.IsNullOrEmpty( desc.Id ) )
                     {
                         desc.Id = properties.First( p => field.Name.Contains( p.Name ) ).Name;

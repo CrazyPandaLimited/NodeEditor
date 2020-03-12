@@ -11,9 +11,10 @@ namespace CrazyPanda.UnityCore.NodeEditor
     public class CollectionField : VisualElement
     {
         private FieldInfo _field;
-        private PropertyBlock _propertyBlock;
+        private object _propertyBlock;
+        private bool _isExpanded;
 
-        private Foldout _foldout;        
+        private Foldout _foldout;
 
         public FieldInfo Field
         {
@@ -25,7 +26,7 @@ namespace CrazyPanda.UnityCore.NodeEditor
             }
         }
 
-        public PropertyBlock PropertyBlock
+        public object CollectionOwner
         {
             get => _propertyBlock;
             set
@@ -35,11 +36,15 @@ namespace CrazyPanda.UnityCore.NodeEditor
             }
         }
 
+        public event Action<CollectionField> Changed;
+
         public IList List => _field?.GetValue( _propertyBlock ) as IList;
 
         public CollectionField()
         {
             _foldout = new Foldout();
+            _foldout.RegisterValueChangedCallback( e => _isExpanded = e.newValue );
+
             Add( _foldout );
         }
 
@@ -47,18 +52,19 @@ namespace CrazyPanda.UnityCore.NodeEditor
         {
             _foldout.Clear();
             _foldout.text = ObjectNames.NicifyVariableName( _field?.Name ?? "" );
-            _foldout.value = false;
+            _foldout.value = _isExpanded;
 
             if( _field == null || _propertyBlock == null )
                 return;
 
-            var fieldValue = _field?.GetValue( _propertyBlock );
+            var fieldValue = _field.GetValue( _propertyBlock );
             if( fieldValue == null )
             {
                 // deserialized nodes always have not null fields in propertyblock, but newly created nodes may have not initialized properties
                 try
                 {
                     fieldValue = Activator.CreateInstance( _field.FieldType );
+                    _field.SetValue( _propertyBlock, fieldValue );
                 }
                 catch
                 {
@@ -72,22 +78,34 @@ namespace CrazyPanda.UnityCore.NodeEditor
 
             for( int i = 0; i < list.Count; i++ )
             {
-                var item = list[i];
+                var item = list[ i ];
 
                 var actualType = itemType;
                 if( actualType == typeof( object ) && item != null )
                     actualType = item.GetType();
 
                 int idx = i;
-                var editor = PropertyBlockField.CreateEditor( actualType, $"[{i}]", item, v => list[ idx ] = v );
+                var editor = PropertyBlockField.CreateEditor( actualType, $"[{i}]", item, v => { list[ idx ] = v; Changed?.Invoke( this ); } );
 
-                var removeButton = new Button( () => RemoveItem( idx ) ) { text = "X" };
-                removeButton.style.width = 20;
-                removeButton.style.maxHeight = 22;
-                removeButton.style.marginBottom = 0;
-                editor.Add( removeButton );
+                if( editor != null )
+                {
+                    editor.style.flexGrow = 1;
+                    var horzBox = new VisualElement() { name = "collection-row" };
+                    {
+                        horzBox.style.flexDirection = FlexDirection.Row;
 
-                _foldout.Add( editor );
+                        horzBox.Add( editor );
+
+                        var removeButton = new Button( () => RemoveItem( idx ) ) { text = "X" };
+                        {
+                            removeButton.style.width = 20;
+                            removeButton.style.maxHeight = 22;
+                            removeButton.style.marginBottom = 0;
+                        }
+                        horzBox.Add( removeButton );
+                    }
+                    _foldout.Add( horzBox );
+                }
             }
 
             var addButton = new Button( AddItem ) { text = "Add item" };
@@ -103,18 +121,21 @@ namespace CrazyPanda.UnityCore.NodeEditor
             else
                 List.Add( Activator.CreateInstance( itemType ) );
 
+            Changed?.Invoke( this );
             Rebuild();
         }
 
         private void RemoveItem( int idx )
         {
             List.RemoveAt( idx );
+
+            Changed?.Invoke( this );
             Rebuild();
         }
 
         private Type GetEnumerableType( Type type )
         {
-            var enumerableType = type.GetInterfaces().FirstOrDefault(t => t.IsGenericType && t.GetGenericTypeDefinition() == typeof( IEnumerable<> ) );
+            var enumerableType = type.GetInterfaces().FirstOrDefault( t => t.IsGenericType && t.GetGenericTypeDefinition() == typeof( IEnumerable<> ) );
             return enumerableType.GetGenericArguments()[ 0 ];
         }
     }

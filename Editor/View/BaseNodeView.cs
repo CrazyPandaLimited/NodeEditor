@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.Linq;
 using UnityEditor;
 using UnityEditor.Experimental.GraphView;
 using UnityEngine;
@@ -30,13 +31,7 @@ namespace CrazyPanda.UnityCore.NodeEditor
 
             foreach( var port in Node.Ports )
             {
-                var target = port.Direction == PortDirection.Input ? inputContainer : outputContainer;
-                var portView = CreatePort( port );
-
-                portView.SetupEdgeConnector<BaseConnectionView>( EdgeConnectorListener );
-
-                target.Add( portView );
-                _ports.Add( portView );
+                AddPort( port );
             }
 
             var contents = this.Q( "contents" );
@@ -63,6 +58,8 @@ namespace CrazyPanda.UnityCore.NodeEditor
                 contents.Add( _propertiesExpander );
             }
 
+            Node.PortsChanged += OnNodePortsChanged;
+
             RefreshPorts();
             RefreshExpandedState();
         }
@@ -86,6 +83,26 @@ namespace CrazyPanda.UnityCore.NodeEditor
             return new BasePortView( port, Orientation.Horizontal );
         }
 
+        private void AddPort( PortModel port )
+        {
+            var target = port.Direction == PortDirection.Input ? inputContainer : outputContainer;
+            var portView = CreatePort( port );
+
+            portView.SetupEdgeConnector<BaseConnectionView>( EdgeConnectorListener );
+
+            target.Add( portView );
+            _ports.Add( portView );
+        }
+
+        private void RemovePort( PortModel port )
+        {
+            var target = port.Direction == PortDirection.Input ? inputContainer : outputContainer;
+            var portView = target.Children().OfType<BasePortView>().First( v => v.Port == port );
+
+            target.Remove( portView );
+            _ports.Remove( portView );
+        }
+
         private void TogglePropertiesView()
         {
             if( _propertiesView == null )
@@ -94,6 +111,7 @@ namespace CrazyPanda.UnityCore.NodeEditor
                 _propertiesView.name = "properties-view";
                 _propertiesToggle.AddToClassList( "expanded" );
                 extensionContainer.Add( _propertiesView );
+                BringToFront();
             }
             else
             {
@@ -103,6 +121,18 @@ namespace CrazyPanda.UnityCore.NodeEditor
             }
 
             RefreshExpandedState();
+        }
+
+        private void OnNodePortsChanged( NodeModel.NodePortsChangedArgs args )
+        {
+            if( args.IsAdded )
+            {
+                AddPort( args.Port );
+            }
+            else
+            {
+                RemovePort( args.Port );
+            }
         }
     }
 }

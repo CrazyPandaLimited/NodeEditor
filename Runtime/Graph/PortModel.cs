@@ -51,7 +51,13 @@ namespace CrazyPanda.UnityCore.NodeEditor
         public NodeModel Node
         {
             get => _node;
-            set => this.SetOnce( ref _node, value );
+            set
+            {
+                if( value != null && _node != null )
+                    throw new InvalidOperationException( $"Cannot move port from node {_node} to node {value}" );
+
+                _node = value;
+            }
         }
 
         public IList<ConnectionModel> Connections { get; } = new List<ConnectionModel>();
