@@ -78,7 +78,7 @@ namespace CrazyPanda.UnityCore.NodeEditor
             Node.Position = newPos.position;
         }
 
-        protected virtual BasePortView CreatePort( PortModel port )
+        protected virtual BasePortView CreatePortView( PortModel port )
         {
             return new BasePortView( port, Orientation.Horizontal );
         }
@@ -86,7 +86,7 @@ namespace CrazyPanda.UnityCore.NodeEditor
         private void AddPort( PortModel port )
         {
             var target = port.Direction == PortDirection.Input ? inputContainer : outputContainer;
-            var portView = CreatePort( port );
+            var portView = CreatePortView( port );
 
             portView.SetupEdgeConnector<BaseConnectionView>( EdgeConnectorListener );
 
