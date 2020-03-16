@@ -152,17 +152,17 @@ namespace CrazyPanda.UnityCore.NodeEditor
             return _changeSet;
         }
 
-        public void Execute( Action<INodeExecutionContext> nodeAction, Action<IConnectionExecutionContext> connectionAction = null )
+        public IGraphExecutionResult Execute( Action<INodeExecutionContext> nodeAction, Action<IConnectionExecutionContext> connectionAction = null )
         {
             var nodesToCheck = new Queue<NodeModel>( _nodes.Where( n => !n.InputPorts().Any() ) );
+            var ctx = new GraphExecutionContext();
 
             if( nodesToCheck.Count == 0 )
             {
                 Debug.LogError( "Cannot walk graph! All of its nodes have inputs" );
-                return;
+                return ctx;
             }
 
-            var ctx = new GraphExecutionContext();
             var fulfilledConnections = new HashSet<ConnectionModel>();
 
             while( nodesToCheck.Count > 0 )
@@ -209,19 +209,23 @@ namespace CrazyPanda.UnityCore.NodeEditor
             {
                 Debug.LogError( "Some nodes have unfulfilled connections!" );
             }
+
+            ctx.Node = null;
+            ctx.Connection = null;
+            return ctx;
         }
 
-        public async Task ExecuteAsync( Func<INodeExecutionContext, Task> nodeAction, Func<IConnectionExecutionContext, Task> connectionAction = null )
+        public async Task<IGraphExecutionResult> ExecuteAsync( Func<INodeExecutionContext, Task> nodeAction, Func<IConnectionExecutionContext, Task> connectionAction = null )
         {
             var nodesToCheck = new Queue<NodeModel>( _nodes.Where( n => !n.InputPorts().Any() ) );
+            var ctx = new GraphExecutionContext();
 
             if( nodesToCheck.Count == 0 )
             {
                 Debug.LogError( "Cannot walk graph! All of its nodes have inputs" );
-                return;
+                return ctx;
             }
 
-            var ctx = new GraphExecutionContext();
             var fulfilledConnections = new HashSet<ConnectionModel>();
 
             while( nodesToCheck.Count > 0 )
@@ -266,6 +270,15 @@ namespace CrazyPanda.UnityCore.NodeEditor
                     }
                 }
             }
+
+            if( fulfilledConnections.Count > 0 )
+            {
+                Debug.LogError( "Some nodes have unfulfilled connections!" );
+            }
+
+            ctx.Node = null;
+            ctx.Connection = null;
+            return ctx;
         }
 
         private void DoAddNode( NodeModel node )

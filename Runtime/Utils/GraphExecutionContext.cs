@@ -18,7 +18,13 @@ namespace CrazyPanda.UnityCore.NodeEditor
         void SetOutput<T>( T value );
     }
 
-    class GraphExecutionContext : INodeExecutionContext, IConnectionExecutionContext
+    public interface IGraphExecutionResult
+    {
+        T GetConnectionValue<T>( ConnectionModel connection );
+        T GetPortValue<T>( PortModel port );
+    }
+
+    class GraphExecutionContext : INodeExecutionContext, IConnectionExecutionContext, IGraphExecutionResult
     {
         private Dictionary<PortModel, object> _portValues = new Dictionary<PortModel, object>();
         private Dictionary<ConnectionModel, object> _connectionValues = new Dictionary<ConnectionModel, object>();
@@ -79,7 +85,25 @@ namespace CrazyPanda.UnityCore.NodeEditor
 
         void IConnectionExecutionContext.SetOutput<T>( T value )
         {
+            var port = Connection.To;
+
+            if( !port.Type.IsAssignableFrom( typeof( T ) ) )
+                throw new InvalidOperationException( $"Cannot set value '{value}' of type {typeof( T ).Name} to port of type {port.Type} in connection {Connection}" );
+
             _connectionValues[ Connection ] = value;
+        }
+
+        T IGraphExecutionResult.GetConnectionValue<T>( ConnectionModel connection )
+        {
+            return (this as INodeExecutionContext).GetInput<T>( connection );
+        }
+
+        T IGraphExecutionResult.GetPortValue<T>( PortModel port )
+        {
+            if( _portValues.TryGetValue( port, out var value ) )
+                return ( T )value;
+
+            throw new KeyNotFoundException( $"Cannot find value for port {port}" );
         }
     }
 }

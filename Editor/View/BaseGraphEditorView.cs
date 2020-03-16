@@ -20,8 +20,16 @@ namespace CrazyPanda.UnityCore.NodeEditor
         public GraphModel Graph
         {
             get { return _graph; }
-            set { _graph = value; _graphView.LoadGraph( _graph ); }
+            set
+            {
+                _graph = value;
+                _graphView.LoadGraph( _graph );
+
+                OnGraphLoaded();
+            }
         }
+        
+        public BaseGraphView GraphView => _graphView;
 
         public EditorWindow Window { get; set; }
 
@@ -93,6 +101,10 @@ namespace CrazyPanda.UnityCore.NodeEditor
         protected virtual BaseGraphView CreateGraphView()
         {
             return new BaseGraphView( this );
+        }
+
+        protected virtual void OnGraphLoaded()
+        {
         }
 
         private void NodeSelectRequested( NodeCreationContext obj )

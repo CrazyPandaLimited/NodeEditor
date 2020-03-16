@@ -21,6 +21,8 @@ namespace CrazyPanda.UnityCore.NodeEditor
 
         public GraphModel Graph => _graph;
 
+        public event Action<IReadOnlyList<ISelectable>> SelectionChanged;
+
         public BaseGraphView( IGraphEditorViewFactory editorViewFactory )
         {
             styleSheets.Add( Resources.Load<StyleSheet>( "Styles/BaseGraphView" ) );
@@ -73,6 +75,33 @@ namespace CrazyPanda.UnityCore.NodeEditor
              } );
 
             return ret;
+        }
+
+        public override void AddToSelection( ISelectable selectable )
+        {
+            var prev = selection.Count;
+            base.AddToSelection( selectable );
+
+            if(prev != selection.Count)
+                SelectionChanged?.Invoke( selection );
+        }
+
+        public override void ClearSelection()
+        {
+            var prev = selection.Count;
+            base.ClearSelection();
+
+            if( prev != selection.Count )
+                SelectionChanged?.Invoke( selection );
+        }
+
+        public override void RemoveFromSelection( ISelectable selectable )
+        {
+            var prev = selection.Count;
+            base.RemoveFromSelection( selectable );
+
+            if( prev != selection.Count )
+                SelectionChanged?.Invoke( selection );
         }
 
         private void OnGraphChanged( IReadOnlyList<NodeModel> addedNodes, IReadOnlyList<NodeModel> removedNodes, IReadOnlyList<ConnectionModel> addedConnections, IReadOnlyList<ConnectionModel> removedConnections )
