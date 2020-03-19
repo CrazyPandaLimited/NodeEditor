@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
+using UnityEditor;
 
 namespace CrazyPanda.UnityCore.NodeEditor
 {
@@ -18,5 +19,10 @@ namespace CrazyPanda.UnityCore.NodeEditor
         string Name { get; }
 
         void PostLoad( GraphModel graph );
+    }
+
+    public interface IExecutableGraphType : IGraphType
+    {
+        IGraphExecutionResult Execute( GraphModel graph, BuildTarget target );
     }
 }

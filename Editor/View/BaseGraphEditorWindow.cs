@@ -17,7 +17,7 @@ namespace CrazyPanda.UnityCore.NodeEditor
         private BaseGraphEditorView _graphEditorView;
 
         public string GraphAssetGuid => _graphAssetGuid;
-        
+
         private void OnEnable()
         {
             _graphEditorView = CreateEditorView();
@@ -38,14 +38,10 @@ namespace CrazyPanda.UnityCore.NodeEditor
         public void LoadGraph( string graphAssetGuid )
         {
             _graphAssetGuid = graphAssetGuid;
-
-            var path = AssetDatabase.GUIDToAssetPath( _graphAssetGuid );
-            var textGraph = File.ReadAllText( path, Encoding.UTF8 );
-
-            _graph = GraphSerializer.Deserialize( textGraph );
+            _graph = GraphSerializer.DeserializeFromGuid( _graphAssetGuid );
             _graphEditorView.Graph = _graph;
 
-            titleContent = new GUIContent( Path.GetFileNameWithoutExtension( path ) );
+            titleContent = new GUIContent( Path.GetFileNameWithoutExtension( AssetDatabase.GUIDToAssetPath( _graphAssetGuid ) ) );
         }
 
         public void SaveGraph()

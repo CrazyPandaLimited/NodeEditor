@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.IO;
 using System.Linq;
 using System.Net.Http;
 using System.Text;
@@ -97,6 +98,14 @@ namespace CrazyPanda.UnityCore.NodeEditor
             graphType.PostLoad( ret );
 
             return ret;
+        }
+
+        public static GraphModel DeserializeFromGuid( string assetGuid, List<SConnection> brokenConnections = null )
+        {
+            var path = AssetDatabase.GUIDToAssetPath( assetGuid );
+            var graphText = File.ReadAllText( path, Encoding.UTF8 );
+
+            return Deserialize( graphText, brokenConnections );
         }
 
         private static Type FindType( string typeName )

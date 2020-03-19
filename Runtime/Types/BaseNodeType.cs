@@ -74,8 +74,10 @@ namespace CrazyPanda.UnityCore.NodeEditor
             var type = GetType();
             var props = type.GetProperties();
 
+            // GetFields does not return fields of base type, so we need to check them manually
             while( type != typeof( object ) )
             {
+                // retreive private fields only - we are seeking for backing fields of properties
                 var fields = type.GetFields( BindingFlags.Instance | BindingFlags.NonPublic );
                 ProcessFields( fields, props );
 
@@ -117,17 +119,25 @@ namespace CrazyPanda.UnityCore.NodeEditor
                 if( desc.Type != null )
                 {
                     var value = field.GetValue( this );
-                    //var value = Activator.CreateInstance( t );
                     var idField = fieldType.GetField( "Id" );
 
                     desc.Id = idField.GetValue( value ) as string;
 
+                    // if struct does not have own Id set, retreive it from field.Name
                     if( string.IsNullOrEmpty( desc.Id ) )
                     {
-                        desc.Id = properties.First( p => field.Name.Contains( p.Name ) ).Name;
+                        // backing fields are named as <PropertyName>k_BackingField
+                        // we extract PropertyName from it and use as port name
+                        var fn = field.Name;
+                        var startIdx = fn.IndexOf( '<' ) + 1;
+                        var endIdx = fn.IndexOf( '>' );
+                        desc.Id = fn.Substring( startIdx, endIdx - startIdx );
+
+                        // store new Id to port definition struct
                         fieldType.GetField( "Id" ).SetValue( value, desc.Id );
                     }
 
+                    // store updated struct into field
                     field.SetValue( this, value );
 
                     _collectedPorts.Add( desc );
