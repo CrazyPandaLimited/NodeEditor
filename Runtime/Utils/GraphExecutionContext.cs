@@ -44,10 +44,13 @@ namespace CrazyPanda.UnityCore.NodeEditor
 
         T INodeExecutionContext.GetInput<T>( ConnectionModel connection )
         {
-            if( !TryGetInput<T>( connection, out var value ) )
+            if( !TryGetInput( connection, out var valueObject ) )
                 throw new KeyNotFoundException( $"Cannot find value for connection {connection}" );
 
-            return value;
+            if( !(valueObject is T) )
+                throw new ArgumentException( $"Expected value of type {typeof( T ).Name} but got {valueObject?.GetType().Name ?? "<null>"}" );
+
+            return ( T )valueObject;
         }
 
         void INodeExecutionContext.SetOutput<T>( string portId, T value )
@@ -89,7 +92,14 @@ namespace CrazyPanda.UnityCore.NodeEditor
 
         bool IGraphExecutionResult.TryGetConnectionValue<T>( ConnectionModel connection, out T value )
         {
-            return TryGetInput( connection, out value );
+            if( TryGetInput( connection, out var valueObject ) && valueObject is T )
+            {
+                value = ( T )valueObject;
+                return true;
+            }
+
+            value = default;
+            return false;
         }
 
         bool IGraphExecutionResult.TryGetPortValue<T>( PortModel port, out T value  )
@@ -104,22 +114,16 @@ namespace CrazyPanda.UnityCore.NodeEditor
             return false;
         }
 
-        private bool TryGetInput<T>( ConnectionModel connection, out T value  )
+        private bool TryGetInput( ConnectionModel connection, out object value  )
         {
             if( connection == null )
                 throw new ArgumentNullException( nameof( connection ) );
 
-            if( _connectionValues.TryGetValue( connection, out var valueObject ) )
-            {
-                value = ( T )valueObject;
+            if( _connectionValues.TryGetValue( connection, out value ) )
                 return true;
-            }
 
-            if( _portValues.TryGetValue( connection.From, out valueObject ) )
-            {
-                value = ( T )valueObject;
+            if( _portValues.TryGetValue( connection.From, out value ) )
                 return true;
-            }
 
             value = default;
             return false;

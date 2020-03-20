@@ -14,6 +14,7 @@ namespace CrazyPanda.UnityCore.NodeEditor
         }
                 
         public BaseConnectionView()
+            : this( null )
         {
             // we need this constructor for EdgeConnector<T> to work
         }
@@ -21,11 +22,6 @@ namespace CrazyPanda.UnityCore.NodeEditor
         public BaseConnectionView( ConnectionModel connection )
         {
             Connection = connection;
-        }
-
-        public VisualElement CreateInspectorGUI()
-        {
-            return null;
         }
     }
 }
