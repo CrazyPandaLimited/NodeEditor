@@ -20,8 +20,8 @@ namespace CrazyPanda.UnityCore.NodeEditor
 
     public interface IGraphExecutionResult
     {
-        T GetConnectionValue<T>( ConnectionModel connection );
-        T GetPortValue<T>( PortModel port );
+        bool TryGetConnectionValue<T>( ConnectionModel connection, out T value );
+        bool TryGetPortValue<T>( PortModel port, out T value );
     }
 
     class GraphExecutionContext : INodeExecutionContext, IConnectionExecutionContext, IGraphExecutionResult
@@ -44,16 +44,10 @@ namespace CrazyPanda.UnityCore.NodeEditor
 
         T INodeExecutionContext.GetInput<T>( ConnectionModel connection )
         {
-            if( connection == null )
-                throw new ArgumentNullException( nameof( connection ) );
+            if( !TryGetInput<T>( connection, out var value ) )
+                throw new KeyNotFoundException( $"Cannot find value for connection {connection}" );
 
-            if( _connectionValues.TryGetValue( connection, out var value ) )
-                return ( T )value;
-
-            if( _portValues.TryGetValue( connection.From, out value ) )
-                return ( T )value;
-
-            throw new KeyNotFoundException( $"Cannot find value for connection {connection}" );
+            return value;
         }
 
         void INodeExecutionContext.SetOutput<T>( string portId, T value )
@@ -93,17 +87,42 @@ namespace CrazyPanda.UnityCore.NodeEditor
             _connectionValues[ Connection ] = value;
         }
 
-        T IGraphExecutionResult.GetConnectionValue<T>( ConnectionModel connection )
+        bool IGraphExecutionResult.TryGetConnectionValue<T>( ConnectionModel connection, out T value )
         {
-            return (this as INodeExecutionContext).GetInput<T>( connection );
+            return TryGetInput( connection, out value );
         }
 
-        T IGraphExecutionResult.GetPortValue<T>( PortModel port )
+        bool IGraphExecutionResult.TryGetPortValue<T>( PortModel port, out T value  )
         {
-            if( _portValues.TryGetValue( port, out var value ) )
-                return ( T )value;
+            if( _portValues.TryGetValue( port, out var valueObject ) )
+            {
+                value = ( T )valueObject;
+                return true;
+            }
 
-            throw new KeyNotFoundException( $"Cannot find value for port {port}" );
+            value = default;
+            return false;
+        }
+
+        private bool TryGetInput<T>( ConnectionModel connection, out T value  )
+        {
+            if( connection == null )
+                throw new ArgumentNullException( nameof( connection ) );
+
+            if( _connectionValues.TryGetValue( connection, out var valueObject ) )
+            {
+                value = ( T )valueObject;
+                return true;
+            }
+
+            if( _portValues.TryGetValue( connection.From, out valueObject ) )
+            {
+                value = ( T )valueObject;
+                return true;
+            }
+
+            value = default;
+            return false;
         }
     }
 }

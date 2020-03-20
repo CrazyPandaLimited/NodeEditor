@@ -28,7 +28,7 @@ namespace CrazyPanda.UnityCore.NodeEditor
             styleSheets.Add( Resources.Load<StyleSheet>( "Styles/BaseGraphView" ) );
 
             _editorViewFactory = editorViewFactory;
-            _edgeConnectorListener = new EdgeConnectorListener();
+            _edgeConnectorListener = new EdgeConnectorListener( this );
 
             _background = new GridBackground() { name = "GridBackground" };
             Add( _background );
@@ -82,7 +82,7 @@ namespace CrazyPanda.UnityCore.NodeEditor
             var prev = selection.Count;
             base.AddToSelection( selectable );
 
-            if(prev != selection.Count)
+            if( prev != selection.Count )
                 SelectionChanged?.Invoke( selection );
         }
 

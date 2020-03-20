@@ -28,7 +28,7 @@ namespace CrazyPanda.UnityCore.NodeEditor
                 OnGraphLoaded();
             }
         }
-        
+
         public BaseGraphView GraphView => _graphView;
 
         public EditorWindow Window { get; set; }
@@ -64,7 +64,7 @@ namespace CrazyPanda.UnityCore.NodeEditor
                         button.Action?.Invoke();
                     }
                 }
-                
+
                 GUILayout.EndHorizontal();
             } );
             Add( toolbar );
@@ -109,23 +109,40 @@ namespace CrazyPanda.UnityCore.NodeEditor
 
         private void NodeSelectRequested( NodeCreationContext obj )
         {
+            var port = ((obj.target as BaseConnectionView)?.output as BasePortView).Port;
+
             var searchWindowProvider = ScriptableObject.CreateInstance<SearchWindowProvider>();
-            searchWindowProvider.Init( Graph.Type, NodeCreationRequested );
+            searchWindowProvider.Init( Graph.Type, NodeCreationRequested, port );
 
             SearchWindow.Open( new SearchWindowContext( obj.screenMousePosition ), searchWindowProvider );
         }
 
-        private bool NodeCreationRequested( INodeType nodeType, Vector2 screenMousePosition )
+        private bool NodeCreationRequested( SearchWindowResult result )
         {
-            var newNode = new NodeModel( nodeType );
-            nodeType.PostLoad( newNode );
-            
+            var newNode = new NodeModel( result.NodeType );
+            result.NodeType.PostLoad( newNode );
+
             var windowRoot = Window.rootVisualElement;
-            var windowMousePosition = windowRoot.ChangeCoordinatesTo( windowRoot.parent, screenMousePosition - Window.position.position );
+            var windowMousePosition = windowRoot.ChangeCoordinatesTo( windowRoot.parent, result.ScreenPosition - Window.position.position );
+            windowMousePosition.y -= windowRoot.worldBound.y; // compensate for window header
             var graphMousePosition = _graphView.contentViewContainer.WorldToLocal( windowMousePosition );
 
             newNode.Position = graphMousePosition;
-            _graph.AddNode( newNode );
+
+            using( _graph.BeginChangeSet() )
+            {
+                _graph.AddNode( newNode );
+
+                if( result.FromPort != null )
+                {
+                    var toPort = newNode.InputPorts().FirstOrDefault( p => _graph.CanConnect( result.FromPort, p ) );
+
+                    if( toPort != null )
+                    {
+                        _graph.Connect( result.FromPort, toPort );
+                    }
+                }
+            }
 
             return true;
         }
