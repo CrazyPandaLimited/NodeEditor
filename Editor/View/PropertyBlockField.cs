@@ -1,4 +1,4 @@
-﻿using System;
+using System;
 using System.Collections;
 using System.Collections.Generic;
 using System.Linq;
@@ -61,6 +61,10 @@ namespace CrazyPanda.UnityCore.NodeEditor
 
         public static VisualElement CreateEditor( Type valueType, string label, object value, Action<object> setter )
         {
+            // Type's static constructor may register editor mappings
+            // make sure it was called prior to searching for appropriate editor
+            System.Runtime.CompilerServices.RuntimeHelpers.RunClassConstructor( valueType.TypeHandle );
+
             if( _typeMappings.TryGetValue( valueType, out var action ) )
             {
                 return action( label, value, setter );

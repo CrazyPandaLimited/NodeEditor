@@ -5,6 +5,7 @@ using System.Text;
 using System.Threading.Tasks;
 using UnityEditor;
 using UnityEditor.Experimental.GraphView;
+using UnityEditor.UIElements;
 using UnityEngine;
 using UnityEngine.UIElements;
 
@@ -33,7 +34,7 @@ namespace CrazyPanda.UnityCore.NodeEditor
 
         public EditorWindow Window { get; set; }
 
-        protected IEnumerable<(string Title, Action Action)> CustomButtons { get; set; } = new (string, Action)[ 0 ];
+        public Toolbar Toolbar { get; }
 
         public event Action SaveRequested;
         public event Action ShowInProjectRequested;
@@ -42,32 +43,13 @@ namespace CrazyPanda.UnityCore.NodeEditor
         {
             styleSheets.Add( Resources.Load<StyleSheet>( $"Styles/BaseGraphEditorView" ) );
 
-            var toolbar = new IMGUIContainer( () =>
+            Toolbar = new Toolbar() { name = "main-toolbar" };
             {
-                GUILayout.BeginHorizontal( EditorStyles.toolbar );
-                if( GUILayout.Button( "Save Asset", EditorStyles.toolbarButton ) )
-                {
-                    SaveRequested?.Invoke();
-                }
-                GUILayout.Space( 6 );
-                if( GUILayout.Button( "Show In Project", EditorStyles.toolbarButton ) )
-                {
-                    ShowInProjectRequested?.Invoke();
-                }
-
-                GUILayout.FlexibleSpace();
-
-                foreach( var button in CustomButtons )
-                {
-                    if( GUILayout.Button( button.Title, EditorStyles.toolbarButton ) )
-                    {
-                        button.Action?.Invoke();
-                    }
-                }
-
-                GUILayout.EndHorizontal();
-            } );
-            Add( toolbar );
+                Toolbar.Add( new ToolbarButton( () => SaveRequested?.Invoke() ) { text = "Save Asset" } );
+                Toolbar.Add( new ToolbarSpacer() );
+                Toolbar.Add( new ToolbarButton( () => ShowInProjectRequested?.Invoke() ) { text = "Show In Project" } );
+            }
+            Add( Toolbar );
 
             var content = new VisualElement { name = "content" };
             {
@@ -109,7 +91,7 @@ namespace CrazyPanda.UnityCore.NodeEditor
 
         private void NodeSelectRequested( NodeCreationContext obj )
         {
-            var port = ((obj.target as BaseConnectionView)?.output as BasePortView).Port;
+            var port = ((obj.target as BaseConnectionView)?.output as BasePortView)?.Port;
 
             var searchWindowProvider = ScriptableObject.CreateInstance<SearchWindowProvider>();
             searchWindowProvider.Init( Graph.Type, NodeCreationRequested, port );
