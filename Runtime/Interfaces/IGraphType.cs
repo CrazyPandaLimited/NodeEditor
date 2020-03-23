@@ -1,4 +1,4 @@
-﻿using System;
+using System;
 using System.Collections.Generic;
 using UnityEditor;
 
@@ -21,8 +21,8 @@ namespace CrazyPanda.UnityCore.NodeEditor
         void PostLoad( GraphModel graph );
     }
 
-    public interface IExecutableGraphType : IGraphType
+    public interface IExecutableGraphType<TArgs> : IGraphType
     {
-        IGraphExecutionResult Execute( GraphModel graph, BuildTarget target );
+        IGraphExecutionResult Execute( GraphModel graph, TArgs target );
     }
 }

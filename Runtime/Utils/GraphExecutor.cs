@@ -1,56 +1,52 @@
-﻿using System;
+using System;
 using UnityEditor;
 
 namespace CrazyPanda.UnityCore.NodeEditor
 {
     /// <summary>
-    /// Helper class for executing graphs of types implementing <see cref="IExecutableGraphType"/>
+    /// Helper class for executing graphs of types implementing <see cref="IExecutableGraphType{TArgs}"/>
     /// </summary>
     public static class GraphExecutor
     {
         /// <summary>
         /// Executes graph given its asset guid
         /// </summary>
+        /// <typeparam name="TArgs">Additional arguments type</typeparam>
         /// <param name="assetGuid"><see cref="AssetDatabase"/> GUID of a graph to execute</param>
-        /// <param name="targetPlatform">Target platform to use. Uses <see cref="EditorUserBuildSettings.activeBuildTarget"/> if not set</param>
+        /// <param name="args">Additional arguments for the executor</param>
         /// <returns>Execution result</returns>
-        public static IGraphExecutionResult ExecuteGraphAsset(string assetGuid, BuildTarget targetPlatform = BuildTarget.NoTarget)
+        public static IGraphExecutionResult ExecuteGraphAsset<TArgs>( string assetGuid, TArgs args )
         {
-            var graph = GraphSerializer.DeserializeFromGuid(assetGuid);
-            return ExecuteGraph(graph, targetPlatform);
+            var graph = GraphSerializer.DeserializeFromGuid( assetGuid );
+            return ExecuteGraph( graph, args );
         }
 
         /// <summary>
         /// Executes <see cref="GraphAsset"/>
         /// </summary>
+        /// <typeparam name="TArgs">Additional arguments type</typeparam>
         /// <param name="asset">Graph asset to execute</param>
-        /// <param name="targetPlatform">Target platform to use. Uses <see cref="EditorUserBuildSettings.activeBuildTarget"/> if not set</param>
+        /// <param name="args">Additional arguments for the executor</param>
         /// <returns>Execution result</returns>
-        public static IGraphExecutionResult ExecuteGraphAsset(GraphAsset asset, BuildTarget targetPlatform = BuildTarget.NoTarget)
+        public static IGraphExecutionResult ExecuteGraphAsset<TArgs>( GraphAsset asset, TArgs args )
         {
             var graph = asset.Graph;
-            return ExecuteGraph(graph, targetPlatform);
+            return ExecuteGraph( graph, args );
         }
 
         /// <summary>
         /// Executes <see cref="GraphModel"/>
         /// </summary>
+        /// <typeparam name="TArgs">Additional arguments type</typeparam>
         /// <param name="graph">Graph to execute</param>
-        /// <param name="targetPlatform">Target platform to use. Uses <see cref="EditorUserBuildSettings.activeBuildTarget"/> if not set</param>
+        /// <param name="args">Additional arguments for the executor</param>
         /// <returns>Execution result</returns>
-        public static IGraphExecutionResult ExecuteGraph(GraphModel graph, BuildTarget targetPlatform = BuildTarget.NoTarget)
+        public static IGraphExecutionResult ExecuteGraph<TArgs>( GraphModel graph, TArgs args )
         {
-            if(targetPlatform == BuildTarget.NoTarget)
-                targetPlatform = EditorUserBuildSettings.activeBuildTarget;
+            var executor = graph.Type as IExecutableGraphType<TArgs>
+                ?? throw new ArgumentException( $"Graph type '{graph.Type.Name}' is not executable" );
 
-            var buildTargetGroup = BuildPipeline.GetBuildTargetGroup(targetPlatform);
-            if(!BuildPipeline.IsBuildTargetSupported(buildTargetGroup, targetPlatform))
-                throw new ArgumentException($"Target platform {targetPlatform} is not supported");
-
-            var executor = graph.Type as IExecutableGraphType
-                ?? throw new ArgumentException($"Graph type '{graph.Type.Name}' is not executable");
-
-            return executor.Execute(graph, targetPlatform);
+            return executor.Execute( graph, args );
         }
     }
 }
