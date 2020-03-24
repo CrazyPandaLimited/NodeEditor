@@ -6,7 +6,6 @@ using System.Net.Http;
 using System.Text;
 using System.Threading.Tasks;
 using Newtonsoft.Json;
-using UnityEditor;
 using UnityEngine;
 
 namespace CrazyPanda.UnityCore.NodeEditor
@@ -102,10 +101,14 @@ namespace CrazyPanda.UnityCore.NodeEditor
 
         public static GraphModel DeserializeFromGuid( string assetGuid, List<SConnection> brokenConnections = null )
         {
-            var path = AssetDatabase.GUIDToAssetPath( assetGuid );
+#if UNITY_EDITOR
+            var path = UnityEditor.AssetDatabase.GUIDToAssetPath( assetGuid );
             var graphText = File.ReadAllText( path, Encoding.UTF8 );
 
             return Deserialize( graphText, brokenConnections );
+#else
+            throw new InvalidOperationException( $"{nameof(DeserializeFromGuid)} may be called only from editor" );
+#endif
         }
 
         private static Type FindType( string typeName )

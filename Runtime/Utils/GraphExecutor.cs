@@ -1,5 +1,4 @@
 using System;
-using UnityEditor;
 
 namespace CrazyPanda.UnityCore.NodeEditor
 {
@@ -9,7 +8,7 @@ namespace CrazyPanda.UnityCore.NodeEditor
     public static class GraphExecutor
     {
         /// <summary>
-        /// Executes graph given its asset guid
+        /// Executes graph given its asset guid. May be called only from editor.
         /// </summary>
         /// <typeparam name="TArgs">Additional arguments type</typeparam>
         /// <param name="assetGuid"><see cref="AssetDatabase"/> GUID of a graph to execute</param>
@@ -17,8 +16,12 @@ namespace CrazyPanda.UnityCore.NodeEditor
         /// <returns>Execution result</returns>
         public static IGraphExecutionResult ExecuteGraphAsset<TArgs>( string assetGuid, TArgs args )
         {
+#if UNITY_EDITOR
             var graph = GraphSerializer.DeserializeFromGuid( assetGuid );
             return ExecuteGraph( graph, args );
+#else
+            throw new InvalidOperationException( $"{nameof(ExecuteGraphAsset)} may be called only from editor" );
+#endif
         }
 
         /// <summary>
