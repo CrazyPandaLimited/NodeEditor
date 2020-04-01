@@ -1,5 +1,6 @@
-using System;
+﻿using System;
 using System.Collections.Generic;
+using System.Threading.Tasks;
 using UnityEditor;
 
 namespace CrazyPanda.UnityCore.NodeEditor
@@ -23,6 +24,11 @@ namespace CrazyPanda.UnityCore.NodeEditor
 
     public interface IExecutableGraphType<TArgs> : IGraphType
     {
-        IGraphExecutionResult Execute( GraphModel graph, TArgs target );
+        IGraphExecutionResult Execute( GraphModel graph, TArgs args );
+    }
+
+    public interface IExecutableAsyncGraphType<TArgs> : IGraphType
+    {
+        Task<IGraphExecutionResult> ExecuteAsync( GraphModel graph, TArgs args );
     }
 }

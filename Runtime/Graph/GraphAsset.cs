@@ -12,7 +12,14 @@ namespace CrazyPanda.UnityCore.NodeEditor
         [SerializeField]
         string _serializedGraph;
 
-        public GraphModel Graph { get; set; }
+        public GraphModel Graph { get; private set; }
+
+        public static GraphAsset Create( GraphModel graph )
+        {
+            var ret = CreateInstance<GraphAsset>();
+            ret.Graph = graph;
+            return ret;
+        }
 
         public void OnBeforeSerialize()
         {

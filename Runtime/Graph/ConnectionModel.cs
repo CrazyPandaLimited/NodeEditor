@@ -12,13 +12,13 @@ namespace CrazyPanda.UnityCore.NodeEditor
         public PortModel From
         {
             get => _from;
-            set => this.SetOnce( ref _from, value );
+            set => this.SetOnceOrNull( ref _from, value );
         }
 
         public PortModel To
         {
             get => _to;
-            set => this.SetOnce( ref _to, value );
+            set => this.SetOnceOrNull( ref _to, value );
         }
 
         public ConnectionModel( IConnectionType type )

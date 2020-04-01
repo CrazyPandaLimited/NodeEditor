@@ -16,10 +16,15 @@ namespace CrazyPanda.UnityCore.NodeEditor
 
         public static string Serialize( GraphModel graph )
         {
-            var sgraph = new SGraph();
-            sgraph.Type = graph.Type.GetType().FullName;
+            if( graph == null )
+                throw new ArgumentNullException( nameof( graph ) );
 
-            foreach( NodeModel node in graph.Nodes )
+            var sgraph = new SGraph
+            {
+                Type = graph.Type.GetType().FullName
+            };
+
+            foreach( var node in graph.Nodes )
             {
                 sgraph.Nodes.Add( new SNode
                 {
@@ -30,7 +35,7 @@ namespace CrazyPanda.UnityCore.NodeEditor
                 } );
             }
 
-            foreach( ConnectionModel connection in graph.Connections )
+            foreach( var connection in graph.Connections )
             {
                 sgraph.Connections.Add( new SConnection
                 {
@@ -47,6 +52,9 @@ namespace CrazyPanda.UnityCore.NodeEditor
 
         public static GraphModel Deserialize( string data, List<SConnection> brokenConnections = null )
         {
+            if( data == null )
+                throw new ArgumentNullException( nameof( data ) );
+
             var resolver = _staticResolver;
 
             var sgraph = JsonConvert.DeserializeObject<SGraph>( data );

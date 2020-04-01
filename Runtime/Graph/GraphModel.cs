@@ -11,8 +11,8 @@ namespace CrazyPanda.UnityCore.NodeEditor
 
     public sealed class GraphModel
     {
-        private static List<NodeModel> _emptyNodes = new List<NodeModel>();
-        private static List<ConnectionModel> _emptyConnections = new List<ConnectionModel>();
+        private static readonly IReadOnlyList<NodeModel> _emptyNodes = new NodeModel[ 0 ];
+        private static readonly IReadOnlyList<ConnectionModel> _emptyConnections = new ConnectionModel[ 0 ];
 
         private List<NodeModel> _nodes = new List<NodeModel>();
         private List<ConnectionModel> _connections = new List<ConnectionModel>();
@@ -27,7 +27,7 @@ namespace CrazyPanda.UnityCore.NodeEditor
 
         public GraphModel( IGraphType type )
         {
-            Type = type;
+            Type = type ?? throw new ArgumentNullException( nameof( type ) );
         }
 
         public void AddNode( NodeModel node )
@@ -38,9 +38,6 @@ namespace CrazyPanda.UnityCore.NodeEditor
             if( _nodes.Contains( node ) )
                 throw new ArgumentException( $"Node '{node}' already added to graph" );
 
-            if( node.Ports.Any( p => p.Capacity == PortCapacity.NotSet || p.Direction == PortDirection.NotSet ) )
-                throw new ArgumentException( $"Ports in node '{node}' are not fully initialized" );
-
             DoAddNode( node );
         }
 
@@ -49,8 +46,29 @@ namespace CrazyPanda.UnityCore.NodeEditor
             if( node == null )
                 throw new ArgumentNullException( nameof( node ) );
 
-            if( !DoRemoveNode( node ) )
-                throw new InvalidOperationException( $"Node '{node}' not found in graph" );
+            // this operation may remove some connections. start a batch if not already
+            ChangeSet scopedChangeSet = null;
+            if( _changeSet == null )
+                _changeSet = scopedChangeSet = new ChangeSet( this );
+
+            try
+            {
+                if( !DoRemoveNode( node ) )
+                    throw new ArgumentException( $"Node '{node}' not found in graph" );
+
+                foreach( var connection in node.InputConnections().ToArray() )
+                    Disconnect( connection );
+
+                foreach( var connection in node.OutputConnections().ToArray() )
+                    Disconnect( connection );
+            }
+            finally
+            {
+                if( scopedChangeSet != null )
+                {
+                    scopedChangeSet?.Dispose();
+                }
+            }
         }
 
         public bool CanConnect( PortModel from, PortModel to )
@@ -61,8 +79,16 @@ namespace CrazyPanda.UnityCore.NodeEditor
             if( to == null )
                 throw new ArgumentNullException( nameof( to ) );
 
-            // check same direction or same node
-            if( from.Direction == to.Direction || from.Node == to.Node )
+            // check direction
+            if( from.Direction == PortDirection.Input || to.Direction == PortDirection.Output )
+                return false;
+
+            // check same node
+            if( from.Node == to.Node )
+                return false;
+
+            // check if ports are in this graph
+            if( from.Node?.Graph != this || to.Node?.Graph != this )
                 return false;
 
             // check types
@@ -94,13 +120,18 @@ namespace CrazyPanda.UnityCore.NodeEditor
 
             try
             {
-                var ret = new ConnectionModel( Type.FindConnectionType( from.Type, to.Type ) )
-                {
-                    From = from,
-                    To = to,
-                };
+                var ret = _changeSet.RemovedConnections?.FirstOrDefault( c => c.From == from && c.To == to );
 
-                ret.Type.PostLoad( ret );
+                if( ret == null )
+                {
+                    ret = new ConnectionModel( Type.FindConnectionType( from.Type, to.Type ) )
+                    {
+                        From = from,
+                        To = to,
+                    };
+
+                    ret.Type.PostLoad( ret );
+                }
 
                 // check from port capacity
                 if( from.Capacity == PortCapacity.Single )
@@ -141,6 +172,14 @@ namespace CrazyPanda.UnityCore.NodeEditor
 
             connection.From.Connections.Remove( connection );
             connection.To.Connections.Remove( connection );
+
+            if( _changeSet == null )
+            {
+                // Connection data must be cleared after callback is fired, or receiver will not know which connection is it
+                // ChangeSet will handle this later
+                connection.From = null;
+                connection.To = null;
+            }
         }
 
         public IDisposable BeginChangeSet()
@@ -154,9 +193,16 @@ namespace CrazyPanda.UnityCore.NodeEditor
 
         public IGraphExecutionResult Execute( Action<INodeExecutionContext> nodeAction, Action<IConnectionExecutionContext> connectionAction = null )
         {
-            var nodesToCheck = new Queue<NodeModel>( _nodes.Where( n => !n.InputPorts().Any() ) );
+            if( nodeAction == null )
+                throw new ArgumentNullException( nameof( nodeAction ) );
+
             var ctx = new GraphExecutionContext();
 
+            // nothing to do if we have no nodes
+            if( _nodes.Count == 0 )
+                return ctx;
+
+            var nodesToCheck = new Queue<NodeModel>( _nodes.Where( n => !n.InputPorts().Any() ) );
             if( nodesToCheck.Count == 0 )
             {
                 Debug.LogError( "Cannot walk graph! All of its nodes have inputs" );
@@ -215,11 +261,23 @@ namespace CrazyPanda.UnityCore.NodeEditor
             return ctx;
         }
 
-        public async Task<IGraphExecutionResult> ExecuteAsync( Func<INodeExecutionContext, Task> nodeAction, Func<IConnectionExecutionContext, Task> connectionAction = null )
+        public Task<IGraphExecutionResult> ExecuteAsync( Func<INodeExecutionContext, Task> nodeAction, Func<IConnectionExecutionContext, Task> connectionAction = null )
         {
-            var nodesToCheck = new Queue<NodeModel>( _nodes.Where( n => !n.InputPorts().Any() ) );
+            if( nodeAction == null )
+                throw new ArgumentNullException( nameof( nodeAction ) );
+
+            return ExecuteAsyncInner( nodeAction, connectionAction );
+        }
+
+        private async Task<IGraphExecutionResult> ExecuteAsyncInner( Func<INodeExecutionContext, Task> nodeAction, Func<IConnectionExecutionContext, Task> connectionAction )
+        {
             var ctx = new GraphExecutionContext();
 
+            // nothing to do if we have no nodes
+            if( _nodes.Count == 0 )
+                return ctx;
+
+            var nodesToCheck = new Queue<NodeModel>( _nodes.Where( n => !n.InputPorts().Any() ) );
             if( nodesToCheck.Count == 0 )
             {
                 Debug.LogError( "Cannot walk graph! All of its nodes have inputs" );
@@ -343,27 +401,40 @@ namespace CrazyPanda.UnityCore.NodeEditor
         {
             private GraphModel _graph;
 
-            private List<NodeModel> _addedNodes;
-            private List<NodeModel> _removedNodes;
-            private List<ConnectionModel> _addedConnections;
-            private List<ConnectionModel> _removedConnections;
+            // DO NOT modify these lists directly. Use Add and Remove methods
+            public List<NodeModel> AddedNodes;
+            public List<NodeModel> RemovedNodes;
+            public List<ConnectionModel> AddedConnections;
+            public List<ConnectionModel> RemovedConnections;
 
             public ChangeSet( GraphModel graph )
             {
                 _graph = graph;
             }
 
-            public void Add( NodeModel node ) => AddRemoveCommon( node, ref _addedNodes, _removedNodes );
-            public void Add( ConnectionModel connection ) => AddRemoveCommon( connection, ref _addedConnections, _removedConnections );
+            public void Add( NodeModel node ) => AddRemoveCommon( node, ref AddedNodes, RemovedNodes );
+            public void Add( ConnectionModel connection ) => AddRemoveCommon( connection, ref AddedConnections, RemovedConnections );
 
-            public void Remove( NodeModel node ) => AddRemoveCommon( node, ref _removedNodes, _addedNodes );
-            public void Remove( ConnectionModel connection ) => AddRemoveCommon( connection, ref _removedConnections, _addedConnections );
+            public void Remove( NodeModel node ) => AddRemoveCommon( node, ref RemovedNodes, AddedNodes );
+            public void Remove( ConnectionModel connection ) => AddRemoveCommon( connection, ref RemovedConnections, AddedConnections );
 
             public void Dispose()
             {
                 if( _graph != null )
                 {
-                    _graph.InvokeChanged( _addedNodes, _removedNodes, _addedConnections, _removedConnections );
+                    _graph.InvokeChanged( AddedNodes, RemovedNodes, AddedConnections, RemovedConnections );
+
+                    if( RemovedConnections != null )
+                    {
+                        // now, after callback was fired, we may clear Connection data
+                        for( int i = 0, k = RemovedConnections.Count; i < k; ++i )
+                        {
+                            var c = RemovedConnections[ i ];
+                            c.From = null;
+                            c.To = null;
+                        }
+                    }
+
                     _graph._changeSet = null;
                     _graph = null;
                 }

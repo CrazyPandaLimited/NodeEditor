@@ -13,12 +13,19 @@ namespace CrazyPanda.UnityCore.NodeEditor
 
         public virtual string Name => GetType().Name.Replace( "Type", "" );
 
-        public void InitModel( NodeModel node )
+        public NodeModel CreateNode()
+        {
+            var ret = new NodeModel( this );
+            (this as INodeType).PostLoad( ret );
+            return ret;
+        }
+
+        void INodeType.InitModel( NodeModel node )
         {
             node.PropertyBlock = CreatePropertyBlock( node );
         }
 
-        public void PostLoad( NodeModel node )
+        void INodeType.PostLoad( NodeModel node )
         {
             if( node.Id == null )
                 node.Id = Guid.NewGuid().ToString();
@@ -37,34 +44,13 @@ namespace CrazyPanda.UnityCore.NodeEditor
             for( int i = 0; i < _collectedPorts.Count; i++ )
             {
                 var desc = _collectedPorts[ i ];
-                node.AddPort( CreatePort( desc.Id, desc.Type, desc.Direction, desc.Capacity ) );
+                node.AddPort( new PortModel( desc.Id, desc.Type, desc.Direction, desc.Capacity ) );
             }
         }
 
         protected virtual PropertyBlock CreatePropertyBlock( NodeModel node )
         {
             return new PropertyBlock();
-        }
-
-        protected static PortModel CreatePort<T>( string id, PortDirection direction, PortCapacity capacity = PortCapacity.NotSet )
-        {
-            return CreatePort( id, typeof( T ), direction, capacity );
-        }
-
-        protected static PortModel CreatePort( string id, Type type, PortDirection direction, PortCapacity capacity = PortCapacity.NotSet )
-        {
-            if( capacity == PortCapacity.NotSet )
-            {
-                // by default input ports are single, output ports are multiple
-                capacity = direction == PortDirection.Input ? PortCapacity.Single : PortCapacity.Multiple;
-            }
-
-            var ret = new PortModel() { Type = type };
-            ret.Direction = direction;
-            ret.Id = id;
-            ret.Capacity = capacity;
-
-            return ret;
         }
 
         private void CollectPortsFromProperties()
@@ -90,6 +76,10 @@ namespace CrazyPanda.UnityCore.NodeEditor
             foreach( var field in fields )
             {
                 var fieldType = field.FieldType;
+
+                // skip non-generic types
+                if( !fieldType.IsGenericType )
+                    continue;
 
                 PortDescription desc = default;
 

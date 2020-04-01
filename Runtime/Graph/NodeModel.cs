@@ -10,6 +10,7 @@ namespace CrazyPanda.UnityCore.NodeEditor
         private string _id;
         private List<PortModel> _ports = new List<PortModel>();
         private PropertyBlock _propertyBlock;
+        private GraphModel _graph;
 
         public string Id
         {
@@ -19,7 +20,11 @@ namespace CrazyPanda.UnityCore.NodeEditor
 
         public INodeType Type { get; }
 
-        public GraphModel Graph { get; set; }
+        public GraphModel Graph
+        {
+            get => _graph;
+            set => this.SetOnceOrNull( ref _graph, value );
+        }
 
         public IReadOnlyList<PortModel> Ports
         {
@@ -38,12 +43,15 @@ namespace CrazyPanda.UnityCore.NodeEditor
 
         public NodeModel( INodeType type )
         {
-            Type = type;
+            Type = type ?? throw new ArgumentNullException( nameof( type ) );
             Type.InitModel( this );
         }
 
         public void AddPort( PortModel port )
         {
+            if( port == null )
+                throw new ArgumentNullException( nameof( port ) );
+
             if( _ports.Find( p => p.Id == port.Id ) != null )
                 throw new ArgumentException( $"Port with id {port.Id} already added to node {this}", nameof( port ) );
 
@@ -55,6 +63,9 @@ namespace CrazyPanda.UnityCore.NodeEditor
 
         public void RemovePort( string portId )
         {
+            if( portId == null )
+                throw new ArgumentNullException( nameof( portId ) );
+
             var portIdx = _ports.FindIndex( p => p.Id == portId );
 
             if( portIdx == -1 )
@@ -75,6 +86,9 @@ namespace CrazyPanda.UnityCore.NodeEditor
 
         public void RemovePort( PortModel port )
         {
+            if( port == null )
+                throw new ArgumentNullException( nameof( port ) );
+
             if( !_ports.Remove( port ) )
                 throw new ArgumentException( $"Port {port} not found in node {this}", nameof( port ) );
 

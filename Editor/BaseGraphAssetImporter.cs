@@ -23,8 +23,7 @@ namespace CrazyPanda.UnityCore.NodeEditor
 
             var graph = GraphSerializer.Deserialize( textGraph );
 
-            var graphAsset = ScriptableObject.CreateInstance<GraphAsset>();
-            graphAsset.Graph = graph;
+            var graphAsset = GraphAsset.Create( graph );
 
             ctx.AddObjectToAsset("MainAsset", graphAsset);
             ctx.SetMainObject( graphAsset );
