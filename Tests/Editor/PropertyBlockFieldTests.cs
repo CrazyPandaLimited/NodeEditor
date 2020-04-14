@@ -103,7 +103,7 @@ namespace CrazyPanda.UnityCore.NodeEditor.Tests
 
         class WithProperty<T> : PropertyBlock, IGenericPropertyBlockHelper
         {
-            public T Property;
+            public T Property = default;
 
             public object PropertyBlockValue => Property;
             public Type EditorType => typeof( BaseField<T> );
