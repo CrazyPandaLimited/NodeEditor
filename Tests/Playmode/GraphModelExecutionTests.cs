@@ -6,6 +6,7 @@ using NUnit.Framework.Constraints;
 
 namespace CrazyPanda.UnityCore.NodeEditor.Tests
 {
+    [ Category( "ModuleTests" ), Category( "LocalTests" ) ]
     class GraphModelExecutionTests
     {
         [Test]
