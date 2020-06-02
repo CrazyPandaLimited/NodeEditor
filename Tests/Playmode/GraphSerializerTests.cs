@@ -9,6 +9,12 @@ namespace CrazyPanda.UnityCore.NodeEditor.Tests
     [ Category( "ModuleTests" ), Category( "LocalTests" ) ]
     class GraphSerializerTests
     {
+        [OneTimeSetUp]
+        public void Setup()
+        {
+            JsonConvert.DefaultSettings = () => new JsonSerializerSettings { Formatting = Formatting.None, ReferenceLoopHandling = ReferenceLoopHandling.Ignore };
+        }
+
         [Test]
         public void SerializeDeserialize_Should_Succeed_WithGraphType()
         {
