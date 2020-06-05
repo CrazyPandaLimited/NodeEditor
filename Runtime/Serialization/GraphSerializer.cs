@@ -55,18 +55,15 @@ namespace CrazyPanda.UnityCore.NodeEditor
             if( data == null )
                 throw new ArgumentNullException( nameof( data ) );
 
-            var resolver = _staticResolver;
-
             var sgraph = JsonConvert.DeserializeObject<SGraph>( data );
-            var gtype = FindType( sgraph.Type ) ?? throw new InvalidOperationException( $"Graph type {sgraph.Type ?? "<null>"} not found!" );
-            var graphType = resolver.GetInstance<IGraphType>( gtype );
-
+            var graphType = _staticResolver.GetInstance< IGraphType >( sgraph.Type ) ?? throw new InvalidOperationException( $"Graph type {sgraph.Type ?? "<null>"} not found!" );
+            
             var ret = new GraphModel( graphType );
+            var nodeResolver = graphType as IGraphTypeResolver ?? _staticResolver;
 
             foreach( var n in sgraph.Nodes )
             {
-                var ntype = FindType( n.Type ) ?? throw new InvalidOperationException( $"Node type {n.Type ?? "<null>"} not found!" );
-                var nodeType = resolver.GetInstance<INodeType>( ntype );
+                var nodeType = nodeResolver.GetInstance< INodeType >( n.Type ) ?? throw new InvalidOperationException( $"Node type {n.Type ?? "<null>"} not found!" );
 
                 var node = new NodeModel( nodeType )
                 {
@@ -117,22 +114,6 @@ namespace CrazyPanda.UnityCore.NodeEditor
 #else
             throw new InvalidOperationException( $"{nameof(DeserializeFromGuid)} may be called only from editor" );
 #endif
-        }
-
-        private static Type FindType( string typeName )
-        {
-            if( string.IsNullOrEmpty( typeName ) )
-                return null;
-
-            var assemblies = AppDomain.CurrentDomain.GetAssemblies();
-            foreach( var assembly in assemblies )
-            {
-                var type = assembly.GetType( typeName );
-                if( type != null )
-                    return type;
-            }
-
-            return null;
         }
 
         [Serializable]

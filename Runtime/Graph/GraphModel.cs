@@ -216,32 +216,16 @@ namespace CrazyPanda.UnityCore.NodeEditor
                 var node = nodesToCheck.Dequeue();
 
                 ctx.Node = node;
+                nodeAction.Invoke( ctx );
+                ctx.ValidateOutputs();
 
-                try
-                {
-                    nodeAction.Invoke( ctx );
-                    ctx.ValidateOutputs();
-                }
-                catch( Exception e )
-                {
-                    ctx.AddException( e );
-                }
-                
                 var outputConnections = node.OutputConnections();
 
                 // mark connected nodes' ports as fulfilled
                 foreach( var connection in outputConnections )
                 {
                     ctx.Connection = connection;
-
-                    try
-                    {
-                        connectionAction?.Invoke( ctx );
-                    }
-                    catch( Exception e )
-                    {
-                        ctx.AddException( e );
-                    }
+                    connectionAction?.Invoke( ctx );
 
                     fulfilledConnections.Add( connection );
                 }
@@ -307,16 +291,8 @@ namespace CrazyPanda.UnityCore.NodeEditor
                 var node = nodesToCheck.Dequeue();
 
                 ctx.Node = node;
-
-                try
-                {
-                    await nodeAction.Invoke( ctx );
-                    ctx.ValidateOutputs();
-                }
-                catch( Exception e )
-                {
-                    ctx.AddException( e );
-                }
+                await nodeAction.Invoke( ctx );
+                ctx.ValidateOutputs();
 
                 var outputConnections = node.OutputConnections();
 
@@ -326,14 +302,7 @@ namespace CrazyPanda.UnityCore.NodeEditor
                     if( connectionAction != null )
                     {
                         ctx.Connection = connection;
-                        try
-                        {
-                            await connectionAction.Invoke( ctx );
-                        }
-                        catch( Exception e )
-                        {
-                            ctx.AddException( e );
-                        }
+                        await connectionAction.Invoke( ctx );
                     }
 
                     fulfilledConnections.Add( connection );

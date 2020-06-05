@@ -20,7 +20,6 @@ namespace CrazyPanda.UnityCore.NodeEditor
 
     public interface IGraphExecutionResult
     {
-        IReadOnlyCollection< Exception > Exceptions { get; }
         bool TryGetConnectionValue<T>( ConnectionModel connection, out T value );
         bool TryGetPortValue<T>( PortModel port, out T value );
     }
@@ -29,29 +28,20 @@ namespace CrazyPanda.UnityCore.NodeEditor
     {
         private Dictionary<PortModel, object> _portValues = new Dictionary<PortModel, object>();
         private Dictionary<ConnectionModel, object> _connectionValues = new Dictionary<ConnectionModel, object>();
-        private readonly List<Exception> _exceptions = new List< Exception >();
+
         public NodeModel Node { get; set; }
 
         public ConnectionModel Connection { get; set; }
-
-        public IReadOnlyCollection< Exception > Exceptions => _exceptions;
 
         public void ValidateOutputs()
         {
             foreach( var port in Node.OutputPorts() )
             {
                 if( !_portValues.ContainsKey( port ) )
-                {
                     throw new InvalidOperationException( $"Not all outputs set for node {Node}" );
-                }
             }
         }
 
-        public void AddException( Exception e )
-        {
-            _exceptions.Add( e );
-        }
-        
         T INodeExecutionContext.GetInput<T>( ConnectionModel connection )
         {
             if( !TryGetInput( connection, out var valueObject ) )
