@@ -1,8 +1,10 @@
-﻿using System.Threading.Tasks;
+﻿using System;
+using System.Threading.Tasks;
 using CrazyPanda.UnityCore.PandaTasks;
 using NSubstitute;
 using NUnit.Framework;
 using NUnit.Framework.Constraints;
+using UnityEngine.TestTools;
 
 namespace CrazyPanda.UnityCore.NodeEditor.Tests
 {
@@ -182,6 +184,78 @@ namespace CrazyPanda.UnityCore.NodeEditor.Tests
             Assert.That( cv2.Value, Is.EqualTo( "test++" ) );
 
             Assert.That( destType.OutValue, Is.EqualTo( "test++" ) );
+        }
+
+        [ AsyncTest ]
+        public async Task ExecuteAsync_Should_Succeed_CatchException_DuringNodeActionExecution()
+        {
+            var exceptionToCatch = new Exception("some_exception");
+            var graph = new GraphModel( GraphModelTests.GraphTypeWithConnections );
+            graph.AddNode( new SourceNode( "test" ).CreateNode() );
+            
+            var result = await graph.ExecuteAsync( _ => throw exceptionToCatch );
+
+            Assert.IsNotEmpty( result.Exceptions );
+            Assert.That( result.Exceptions, Has.Member( exceptionToCatch ) );
+        }
+        
+        [ AsyncTest ]
+        public async Task ExecuteAsync_Should_Succeed_CatchException_DuringConnectionActionExecution()
+        {
+            var exceptionToCatch = new Exception("some_exception");
+            
+            var graph = new GraphModel( GraphModelTests.CreateGraphType( new AppendConnection( "+" ) ) );
+            var sourceType = new SourceNode( "test" );
+            var transferType = new TransferNode();
+
+            var node1 = sourceType.CreateNode();
+            graph.AddNode( node1 );
+
+            var node2 = transferType.CreateNode();
+            graph.AddNode( node2 );
+
+            graph.Connect( sourceType.Out.FromNode( node1 ), transferType.In.FromNode( node2 ) );
+
+            var result = await graph.ExecuteAsync(  ExecuteNodeAsync, _ => throw exceptionToCatch );
+            
+            Assert.IsNotEmpty( result.Exceptions );
+            Assert.That( result.Exceptions, Has.Member( exceptionToCatch ) );
+        }
+
+        [ Test ]
+        public void Execute_Should_Succeed_CatchException_DuringNodeActionExecution()
+        {
+            var exceptionToCatch = new Exception("some_exception");
+            var graph = new GraphModel( GraphModelTests.GraphTypeWithConnections );
+            graph.AddNode( new SourceNode( "test" ).CreateNode() );
+            
+            var result = graph.Execute( context => throw exceptionToCatch );
+
+            Assert.IsNotEmpty( result.Exceptions );
+            Assert.That( result.Exceptions, Has.Member( exceptionToCatch ) );
+        }
+        
+        [ Test ]
+        public void Execute_Should_Succeed_CatchException_DuringConnectionActionExecution()
+        {
+            var exceptionToCatch = new Exception("some_exception");
+            
+            var graph = new GraphModel( GraphModelTests.CreateGraphType( new AppendConnection( "+" ) ) );
+            var sourceType = new SourceNode( "test" );
+            var transferType = new TransferNode();
+
+            var node1 = sourceType.CreateNode();
+            graph.AddNode( node1 );
+
+            var node2 = transferType.CreateNode();
+            graph.AddNode( node2 );
+
+            graph.Connect( sourceType.Out.FromNode( node1 ), transferType.In.FromNode( node2 ) );
+
+            var result = graph.Execute( ExecuteNode, _ => throw exceptionToCatch );
+            
+            Assert.IsNotEmpty( result.Exceptions );
+            Assert.That( result.Exceptions, Has.Member( exceptionToCatch ) );
         }
 
         [Test]
