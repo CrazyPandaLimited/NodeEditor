@@ -13,8 +13,6 @@ namespace CrazyPanda.UnityCore.NodeEditor
 
         public string GraphAssetGuid => _graphAssetGuid;
 
-        protected BaseGraphEditorView GraphEditorView => _graphEditorView;
-
         private void OnEnable()
         {
             _graphEditorView = CreateEditorView();
@@ -43,7 +41,7 @@ namespace CrazyPanda.UnityCore.NodeEditor
 
         public void SaveGraph()
         {
-            if( IsItAllowedToSaveContent() )
+            if( _graphAssetGuid != null && _graph != null )
             {
                 var path = AssetDatabase.GUIDToAssetPath( _graphAssetGuid );
 
@@ -54,11 +52,6 @@ namespace CrazyPanda.UnityCore.NodeEditor
             }
         }
 
-        protected virtual bool IsItAllowedToSaveContent( )
-        {
-            return _graphAssetGuid != null && _graph != null;
-        }
-        
         private void ShowInProject()
         {
             if( _graphAssetGuid != null )
