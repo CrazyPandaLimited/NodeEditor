@@ -15,7 +15,6 @@ namespace CrazyPanda.UnityCore.NodeEditor
     {
         private BaseGraphView _graphView;
 
-        private IEdgeConnectorListener _edgeConnector;
         private GraphModel _graph;
 
         public GraphModel Graph
