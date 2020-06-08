@@ -108,7 +108,7 @@ namespace CrazyPanda.UnityCore.NodeEditor
                 _propertiesView = CreatePropertiesView();
                 _propertiesView.name = "properties-view";
                 _propertiesToggle.AddToClassList( "expanded" );
-                extensionContainer.Add( _propertiesView );
+                extensionContainer.Insert(0, _propertiesView );
                 BringToFront();
             }
             else
