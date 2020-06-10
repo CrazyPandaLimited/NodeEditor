@@ -62,6 +62,9 @@ namespace CrazyPanda.UnityCore.NodeEditor
                 _graphView.AddManipulator( new ClickSelector() );
 
                 _graphView.nodeCreationRequest += NodeSelectRequested;
+
+                new NodesCopyPasteHelper( _graphView );
+                
                 content.Add( _graphView );
             }
             Add( content );
