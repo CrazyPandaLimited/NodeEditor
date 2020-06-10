@@ -49,5 +49,12 @@ namespace CrazyPanda.UnityCore.NodeEditor
         {
             return node.InputPorts().FirstOrDefault( p => p.Id == inputPortId )?.Connections?.SingleOrDefault();
         }
+
+        public static NodeModel CreateNode( this INodeType nodeType )
+        {
+            var ret = new NodeModel( nodeType );
+            nodeType.PostLoad( ret );
+            return ret;
+        }
     }
 }

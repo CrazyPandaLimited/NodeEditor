@@ -1,5 +1,7 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.Linq;
+using UnityEditor;
 using UnityEditor.Experimental.GraphView;
 using UnityEngine;
 
@@ -14,17 +16,17 @@ namespace CrazyPanda.UnityCore.NodeEditor
 
     class SearchWindowProvider : ScriptableObject, ISearchWindowProvider
     {
-        private INodeTypeRegistry _nodeTypeRegistry;
-        private Func<SearchWindowResult, bool> _nodeCreationRequested;
+        private IGraphType _graphType;
         private PortModel _fromPort;
+        private Func<SearchWindowResult, bool> _nodeCreationRequested;
 
         private List<SearchTreeEntry> _results = new List<SearchTreeEntry>();
 
-        public void Init( INodeTypeRegistry nodeTypeRegistry, Func<SearchWindowResult, bool> nodeCreationRequested, PortModel fromPort )
+        public void Init( IGraphType graphType, PortModel fromPort, Func< SearchWindowResult, bool > nodeCreationRequested )
         {
-            _nodeTypeRegistry = nodeTypeRegistry;
-            _nodeCreationRequested = nodeCreationRequested;
+            _graphType = graphType;
             _fromPort = fromPort;
+            _nodeCreationRequested = nodeCreationRequested;
         }
 
         public List<SearchTreeEntry> CreateSearchTree( SearchWindowContext context )
@@ -33,9 +35,24 @@ namespace CrazyPanda.UnityCore.NodeEditor
 
             _results.Add( new SearchTreeGroupEntry( new GUIContent( "Create Node" ) ) );
 
-            foreach( var nodeType in _nodeTypeRegistry.AvailableNodes )
+            foreach( var nodeType in _graphType.AvailableNodes )
             {
-                _results.Add( new SearchTreeEntry( new GUIContent( nodeType.Name ) ) { level = 1, userData = nodeType } );
+                // we need to create a node to know what ports it have
+                var newNode = nodeType.CreateNode();
+
+                // if we have _fromPort, check that we can connect it to any of the input ports in the newNode
+                if( _fromPort == null ||
+                    newNode.InputPorts().Any( p => _graphType.FindConnectionType( _fromPort.Type, p.Type ) != null ) )
+                {
+                    var content = new GUIContent( ObjectNames.NicifyVariableName( nodeType.Name ) );
+                    var searchEntry = new SearchTreeEntry( content )
+                    {
+                        level = 1,
+                        userData = nodeType
+                    };
+
+                    _results.Add( searchEntry );
+                }
             }
 
             return _results;

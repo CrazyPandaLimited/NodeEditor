@@ -13,13 +13,6 @@ namespace CrazyPanda.UnityCore.NodeEditor
 
         public virtual string Name => GetType().Name.Replace( "Type", "" );
 
-        public NodeModel CreateNode()
-        {
-            var ret = new NodeModel( this );
-            (this as INodeType).PostLoad( ret );
-            return ret;
-        }
-
         void INodeType.InitModel( NodeModel node )
         {
             node.PropertyBlock = CreatePropertyBlock( node );

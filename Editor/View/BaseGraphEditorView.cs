@@ -93,7 +93,7 @@ namespace CrazyPanda.UnityCore.NodeEditor
             var port = ((obj.target as BaseConnectionView)?.output as BasePortView)?.Port;
 
             var searchWindowProvider = ScriptableObject.CreateInstance<SearchWindowProvider>();
-            searchWindowProvider.Init( Graph.Type, NodeCreationRequested, port );
+            searchWindowProvider.Init( _graph.Type, port, NodeCreationRequested );
 
             SearchWindow.Open( new SearchWindowContext( obj.screenMousePosition ), searchWindowProvider );
         }
