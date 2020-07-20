@@ -23,6 +23,8 @@ namespace CrazyPanda.UnityCore.NodeEditor
 
         public override void OnInspectorGUI()
         {
+            base.OnInspectorGUI();
+
             if( GUILayout.Button( "Open Graph Editor" ) )
             {
                 AssetImporter importer = target as AssetImporter;
