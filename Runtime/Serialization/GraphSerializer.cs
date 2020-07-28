@@ -17,7 +17,7 @@ namespace CrazyPanda.UnityCore.NodeEditor
             if( graph == null )
                 throw new ArgumentNullException( nameof( graph ) );
 
-            var sgraph = new SGraph { Type = graph.Type.GetType().FullName };
+            var sgraph = new SGraph { Type = _staticResolver.GetTypeName( graph.Type ) };
 
             foreach( var nodeModel in graph.Nodes )
             {
@@ -139,10 +139,13 @@ namespace CrazyPanda.UnityCore.NodeEditor
 
             public static implicit operator SNode( NodeModel node )
             {
+                var typeResolver = node.Graph.Type as IGraphTypeResolver ?? _staticResolver;
+                var typeName = typeResolver.GetTypeName( node.Type ) ?? throw new InvalidOperationException( $"Cannot resolve name for node {node}" );
+
                 return new SNode
                 {
                     Id = node.Id,
-                    Type = node.Type.GetType().FullName,
+                    Type = typeName,
                     Position = node.Position,
                     Properties = JsonConvert.SerializeObject( node.PropertyBlock ),
                 };

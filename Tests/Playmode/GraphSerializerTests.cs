@@ -192,6 +192,48 @@ namespace CrazyPanda.UnityCore.NodeEditor.Tests
             Assert.That( c.To.Id, Is.EqualTo( "In" ) );
         }
 
+        [Test]
+        public void SerializeDeserialize_Should_Succeed_WithCustomTypeResolver()
+        {
+            var graphType = new GraphTypeWithResolver();
+            var graph = new GraphModel( graphType );
+
+            var nodeType = new NodeWithProperties();
+            var node = nodeType.CreateNode();
+
+            graph.AddNode( node );
+
+            var newGraph = SaveLoadGraph( graph );
+
+            Assert.That( newGraph.Nodes.Count, Is.EqualTo( graph.Nodes.Count ) );
+        }
+
+        [Test]
+        public void Serialize_Should_Throw_WhenNodeTypeNameNotSupported_ByCustomResolver()
+        {
+            var graphType = new GraphTypeWithResolver();
+            var graph = new GraphModel( graphType );
+
+            var nodeType = new SourceNode();
+            var node = nodeType.CreateNode();
+
+            graph.AddNode( node );
+
+            Assert.That( () => GraphSerializer.Serialize( graph ), Throws.InvalidOperationException );
+        }
+
+        [Test]
+        public void Deserialize_Should_Throw_WhenNodeTypeNotFound_ByCustomResolver()
+        {
+            var sgraph = new GraphSerializer.SGraph() { Type = typeof( GraphTypeWithResolver ).FullName };
+            var snode = new GraphSerializer.SNode() { Type = "NonExistingType" };
+            sgraph.Nodes.Add( snode );
+
+            var str = JsonConvert.SerializeObject( sgraph );
+
+            Assert.That( () => GraphSerializer.Deserialize( str ), Throws.InvalidOperationException );
+        }
+
         private GraphModel CreateGraph()
         {
             // graph sceme:
@@ -256,6 +298,30 @@ namespace CrazyPanda.UnityCore.NodeEditor.Tests
             public class Properties : PropertyBlock
             {
                 public string Value;
+            }
+        }
+
+        public class GraphTypeWithResolver : GraphType, IGraphTypeResolver
+        {
+            private NodeWithProperties _nodeType = new NodeWithProperties();
+            private const string _nodeTypeName = "MyNodeType";
+
+            public T GetInstance< T >( string typeName )
+                where T : class
+            {
+                if( typeName == _nodeTypeName )
+                    return _nodeType as T;
+
+                return null;
+            }
+
+            public string GetTypeName< T >( T instance )
+                where T : class
+            {
+                if( instance is NodeWithProperties )
+                    return _nodeTypeName;
+
+                return null;
             }
         }
     }
