@@ -76,7 +76,7 @@ namespace CrazyPanda.UnityCore.NodeEditor
             if( port.Node != Node )
                 throw new InvalidOperationException( $"Cannot modify output of other nodes" );
 
-            if( !port.Type.IsAssignableFrom( typeof( T ) ) )
+            if( !port.Type.IsAssignableFrom( value?.GetType() ) )
                 throw new InvalidOperationException( $"Cannot set value '{value}' of type {typeof( T ).Name} to port of type {port.Type}" );
 
             _portValues[ port ] = value;
