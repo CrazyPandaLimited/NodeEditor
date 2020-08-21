@@ -1,0 +1,16 @@
+{
+    "name": "UnityCore.NodeEditor.Editor",
+    "references": [
+        "UnityCore.NodeEditor"
+    ],
+    "includePlatforms": [
+        "Editor"
+    ],
+    "excludePlatforms": [],
+    "allowUnsafeCode": false,
+    "overrideReferences": false,
+    "precompiledReferences": [],
+    "autoReferenced": true,
+    "defineConstraints": [],
+    "noEngineReferences": false
+}

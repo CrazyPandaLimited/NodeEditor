@@ -1,4 +1,4 @@
-GridBackground {
+﻿GridBackground {
     --spacing: 16;
     --thick-lines: 10;
     --line-color: #333333;
@@ -7,9 +7,9 @@ GridBackground {
 
 #GraphTypeLabel {
     position: absolute;
-    font-style: bold;
-    margin: 12 0 0 12;
+    -unity-font-style: bold;
+    margin: 12px 0px 0px 12px;
     color: #444;
     opacity: 0.6;
-    font-size: 36;
+    font-size: 36px;
 }

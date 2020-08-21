@@ -25,7 +25,7 @@ namespace CrazyPanda.UnityCore.NodeEditor
         bool TryGetPortValue<T>( PortModel port, out T value );
     }
 
-    class GraphExecutionContext : INodeExecutionContext, IConnectionExecutionContext, IGraphExecutionResult
+    public class GraphExecutionContext : INodeExecutionContext, IConnectionExecutionContext, IGraphExecutionResult
     {
         private Dictionary<PortModel, object> _portValues = new Dictionary<PortModel, object>();
         private Dictionary<ConnectionModel, object> _connectionValues = new Dictionary<ConnectionModel, object>();

@@ -8,7 +8,7 @@ using UnityEngine;
 
 namespace CrazyPanda.UnityCore.NodeEditor
 {
-    static class GraphSerializer
+    public static class GraphSerializer
     {
         private static DefaultTypeResolver _staticResolver = new DefaultTypeResolver();
 

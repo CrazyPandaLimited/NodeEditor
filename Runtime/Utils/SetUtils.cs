@@ -2,7 +2,7 @@
 
 namespace CrazyPanda.UnityCore.NodeEditor
 {
-    static class SetUtils
+    public static class SetUtils
     {
         /// <summary>
         /// Sets <paramref name="value"/> to <paramref name="field"/> if it has default value. If not - throws
