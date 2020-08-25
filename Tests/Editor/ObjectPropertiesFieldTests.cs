@@ -9,7 +9,7 @@ using UnityEngine.UIElements;
 namespace CrazyPanda.UnityCore.NodeEditor.Tests
 {
     [ Category( "ModuleTests" ), Category( "LocalTests" ) ]
-    class PropertyBlockFieldTests
+    class ObjectPropertiesFieldTests
     {
         // VisualElements must be attached to Panel to work correctly
         // So we create a simple window for them
@@ -32,7 +32,7 @@ namespace CrazyPanda.UnityCore.NodeEditor.Tests
         [TestCaseSource( nameof( _builtinTypesSource ) )]
         public void Should_CreateEditor_ForBuiltinTypes( PropertyBlock block, object newValue )
         {
-            var field = new PropertyBlockField();
+            var field = new ObjectPropertiesField();
             _window.rootVisualElement.Add( field );
             field.PropertyBlock = block;
 
@@ -50,7 +50,7 @@ namespace CrazyPanda.UnityCore.NodeEditor.Tests
         [Test]
         public void Should_CreateEditor_ForCollection()
         {
-            var field = new PropertyBlockField();
+            var field = new ObjectPropertiesField();
             _window.rootVisualElement.Add( field );
             field.PropertyBlock = new WithProperty<List<string>>();
 
@@ -63,7 +63,7 @@ namespace CrazyPanda.UnityCore.NodeEditor.Tests
         [Test]
         public void Should_CreateEditor_ForEnum()
         {
-            var field = new PropertyBlockField();
+            var field = new ObjectPropertiesField();
             _window.rootVisualElement.Add( field );
 
             var block = new WithProperty<PortCapacity>();

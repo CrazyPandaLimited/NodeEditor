@@ -1,4 +1,4 @@
-using System;
+﻿using System;
 using System.Collections;
 using System.Collections.Generic;
 using System.Linq;
@@ -14,7 +14,7 @@ namespace CrazyPanda.UnityCore.NodeEditor
 {
     public delegate VisualElement EditorCreator( string label, object initialValue, Action<object> setter );
 
-    public class PropertyBlockField : VisualElement
+    public class ObjectPropertiesField : VisualElement
     {
         private static Dictionary<Type, EditorCreator> _typeMappings = new Dictionary<Type, EditorCreator>
         {
@@ -43,7 +43,10 @@ namespace CrazyPanda.UnityCore.NodeEditor
             }
         }
 
-        public event Action<PropertyBlockField> Changed;
+        /// <summary>
+        /// changed field and field name
+        /// </summary>
+        public event Action<ObjectPropertiesField, string> Changed;
 
         public static TEditor AddEditor<TEditor, TValue>( VisualElement parent, string label, TValue value, Action<TValue> setter )
             where TEditor : BaseField<TValue>, new()
@@ -79,8 +82,8 @@ namespace CrazyPanda.UnityCore.NodeEditor
             {
                 var foldout = new Foldout() { text = ObjectNames.NicifyVariableName( label ) };
                 {
-                    var propertyBlockField = new PropertyBlockField() { PropertyBlock = value };
-                    propertyBlockField.Changed += pb => setter( pb.PropertyBlock );
+                    var propertyBlockField = new ObjectPropertiesField() { PropertyBlock = value };
+                    propertyBlockField.Changed += (pb, fName) => setter( pb.PropertyBlock );
                     foldout.Add( propertyBlockField );
                 }
                 return foldout;
@@ -120,13 +123,13 @@ namespace CrazyPanda.UnityCore.NodeEditor
                     Field = field,
                 };
 
-                collectionField.Changed += _ => Changed?.Invoke( this );
+                collectionField.Changed += _ => Changed?.Invoke( this, field.Name );
 
                 return collectionField;
             }
             else
             {
-                return CreateEditor( field.FieldType, field.Name, field.GetValue( _propertyBlock ), v => { field.SetValue( _propertyBlock, v ); Changed?.Invoke( this ); } );
+                return CreateEditor( field.FieldType, field.Name, field.GetValue( _propertyBlock ), v => { field.SetValue( _propertyBlock, v ); Changed?.Invoke( this, field.Name ); } );
             }
         }
 

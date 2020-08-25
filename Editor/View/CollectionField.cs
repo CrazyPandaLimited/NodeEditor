@@ -85,7 +85,7 @@ namespace CrazyPanda.UnityCore.NodeEditor
                     actualType = item.GetType();
 
                 int idx = i;
-                var editor = PropertyBlockField.CreateEditor( actualType, $"[{i}]", item, v => { list[ idx ] = v; Changed?.Invoke( this ); } );
+                var editor = ObjectPropertiesField.CreateEditor( actualType, $"[{i}]", item, v => { list[ idx ] = v; Changed?.Invoke( this ); } );
 
                 if( editor != null )
                 {

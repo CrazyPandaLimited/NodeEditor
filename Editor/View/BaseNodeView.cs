@@ -66,7 +66,13 @@ namespace CrazyPanda.UnityCore.NodeEditor
 
         public virtual VisualElement CreatePropertiesView()
         {
-            return new PropertyBlockField() { PropertyBlock = Node.PropertyBlock };
+            var res = new ObjectPropertiesField() { PropertyBlock = Node.PropertyBlock };
+            res.Changed += NodePropertyBlockChanged;
+            return res;
+        }
+
+        protected virtual void NodePropertyBlockChanged( ObjectPropertiesField changedField, string fieldName )
+        {
         }
 
         public override void SetPosition( Rect newPos )
