@@ -7,6 +7,9 @@ using UnityEngine.UIElements;
 
 namespace CrazyPanda.UnityCore.NodeEditor
 {
+    /// <summary>
+    /// Base implementation of <see cref="IConnectionType"/>
+    /// </summary>
     public class BaseConnectionType : IConnectionType
     {
         public virtual void InitModel( ConnectionModel connection )

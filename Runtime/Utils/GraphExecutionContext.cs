@@ -4,24 +4,82 @@ using System.Linq;
 
 namespace CrazyPanda.UnityCore.NodeEditor
 {
+    /// <summary>
+    /// Context of single node execution
+    /// </summary>
     public interface INodeExecutionContext
     {
+        /// <summary>
+        /// Executing node
+        /// </summary>
         NodeModel Node { get; }
+
+        /// <summary>
+        /// Returns value of incoming connection
+        /// </summary>
+        /// <typeparam name="T">Type of value</typeparam>
+        /// <param name="connection">Connection for which we need value</param>
         T GetInput<T>( ConnectionModel connection );
+
+        /// <summary>
+        /// Sets output value for given port id
+        /// </summary>
+        /// <typeparam name="T">Type of value</typeparam>
+        /// <param name="portId"></param>
+        /// <param name="value"></param>
         void SetOutput<T>( string portId, T value );
     }
 
+    /// <summary>
+    /// Context of a single connection execution
+    /// </summary>
     public interface IConnectionExecutionContext
     {
+        /// <summary>
+        /// Executing connection
+        /// </summary>
         ConnectionModel Connection { get; }
+
+        /// <summary>
+        /// Returns input value of current connection
+        /// </summary>
+        /// <typeparam name="T">Type of value</typeparam>
         T GetInput<T>();
+
+        /// <summary>
+        /// Sets output value for current connection
+        /// </summary>
+        /// <typeparam name="T">Type of value</typeparam>
+        /// <param name="value">Value to set</param>
         void SetOutput<T>( T value );
     }
 
+    /// <summary>
+    /// Result of a graph execution
+    /// </summary>
     public interface IGraphExecutionResult
     {
+        /// <summary>
+        /// Collection of all exceptions happened during execution
+        /// </summary>
         IReadOnlyCollection< Exception > Exceptions { get; }
+
+        /// <summary>
+        /// Returns value computed for given <see cref="ConnectionModel"/> if it exists
+        /// </summary>
+        /// <typeparam name="T">Type of value</typeparam>
+        /// <param name="connection">Connection for which we need value</param>
+        /// <param name="value">Variable to store retrieved value</param>
+        /// <returns>True if value was found</returns>
         bool TryGetConnectionValue<T>( ConnectionModel connection, out T value );
+
+        /// <summary>
+        /// Returns value computed for given <see cref="PortModel"/> if it exists
+        /// </summary>
+        /// <typeparam name="T">Type of value</typeparam>
+        /// <param name="port">Port for which we need value</param>
+        /// <param name="value">Variable to store retrieved value</param>
+        /// <returns>True if value was found</returns>
         bool TryGetPortValue<T>( PortModel port, out T value );
     }
 
@@ -76,10 +134,10 @@ namespace CrazyPanda.UnityCore.NodeEditor
             if( port.Node != Node )
                 throw new InvalidOperationException( $"Cannot modify output of other nodes" );
 
-            if( !port.Type.IsValueType && value == null )
+            if( port.Type.IsValueType && value == null )
                 throw new ArgumentNullException( $"Cannot set value <null> to port of type {port.Type}" );
 
-            if( !port.Type.IsAssignableFrom( value.GetType() ) )
+            if( value != null && !port.Type.IsAssignableFrom( value.GetType() ) )
                 throw new InvalidOperationException( $"Cannot set value '{value}' of type {value.GetType().Name} to port of type {port.Type}" );
             
             _portValues[ port ] = value;

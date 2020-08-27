@@ -8,6 +8,9 @@ using UnityEngine.UIElements;
 
 namespace CrazyPanda.UnityCore.NodeEditor
 {
+    /// <summary>
+    /// Base class for <see cref="NodeModel"/> view
+    /// </summary>
     public class BaseNodeView : Node
     {
         private readonly List<BasePortView> _ports = new List<BasePortView>();
@@ -15,10 +18,27 @@ namespace CrazyPanda.UnityCore.NodeEditor
         private VisualElement _propertiesView;
         private VisualElement _propertiesToggle;
 
+        /// <summary>
+        /// Associated node
+        /// </summary>
         public NodeModel Node { get; }
+
+        /// <summary>
+        /// Listener used to create new connections.
+        /// Needed for <see cref="UnityEditor.Experimental.GraphView"/> to work properly
+        /// </summary>
         public IEdgeConnectorListener EdgeConnectorListener { get; }
+
+        /// <summary>
+        /// Collection of <see cref="PortModel"/> views
+        /// </summary>
         public IReadOnlyList<BasePortView> Ports => _ports;
 
+        /// <summary>
+        /// Constructor
+        /// </summary>
+        /// <param name="node">Node that needs view</param>
+        /// <param name="edgeConnectorListener">Edge connector listener for this view</param>
         public BaseNodeView( NodeModel node, IEdgeConnectorListener edgeConnectorListener )
         {
             styleSheets.Add( Resources.Load<StyleSheet>( "Styles/BaseNodeView" ) );
@@ -64,6 +84,10 @@ namespace CrazyPanda.UnityCore.NodeEditor
             RefreshExpandedState();
         }
 
+        /// <summary>
+        /// Creates a view for additional properties inside <see cref="NodeModel.PropertyBlock"/>.
+        /// Override this to create custom view
+        /// </summary>
         public virtual VisualElement CreatePropertiesView()
         {
             var res = new ObjectPropertiesField() { PropertyBlock = Node.PropertyBlock };
@@ -71,10 +95,11 @@ namespace CrazyPanda.UnityCore.NodeEditor
             return res;
         }
 
-        protected virtual void NodePropertyBlockChanged( ObjectPropertiesField changedField, string fieldName )
-        {
-        }
-
+        /// <summary>
+        /// Changes position of this node.
+        /// Snaps to grid of 16px by default
+        /// </summary>
+        /// <param name="newPos">New postion of a node</param>
         public override void SetPosition( Rect newPos )
         {
             newPos.x = Mathf.Round( newPos.x / 16 ) * 16;
@@ -84,9 +109,23 @@ namespace CrazyPanda.UnityCore.NodeEditor
             Node.Position = newPos.position;
         }
 
+        /// <summary>
+        /// Creates a view for <see cref="PortModel"/>.
+        /// Override this to create custom view
+        /// </summary>
+        /// <param name="port"></param>
         protected virtual BasePortView CreatePortView( PortModel port )
         {
             return new BasePortView( port, Orientation.Horizontal, EdgeConnectorListener );
+        }
+        
+        /// <summary>
+        /// Called when any property inside <see cref="NodeModel.PropertyBlock"/> is changed
+        /// </summary>
+        /// <param name="changedField">Editor field that was changed</param>
+        /// <param name="fieldName">Name of <see cref="NodeModel.PropertyBlock"/> field that was changed</param>
+        protected virtual void NodePropertyBlockChanged( ObjectPropertiesField changedField, string fieldName )
+        {
         }
 
         private void AddPort( PortModel port )

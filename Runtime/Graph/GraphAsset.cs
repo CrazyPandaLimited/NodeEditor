@@ -7,13 +7,23 @@ using UnityEngine;
 
 namespace CrazyPanda.UnityCore.NodeEditor
 {
+    /// <summary>
+    /// Graph asset that can be serialized via Unity serialization
+    /// </summary>
     public class GraphAsset : ScriptableObject, ISerializationCallbackReceiver
     {
         [SerializeField]
         string _serializedGraph;
 
+        /// <summary>
+        /// Contained graph
+        /// </summary>
         public GraphModel Graph { get; private set; }
 
+        /// <summary>
+        /// Creates <see cref="GraphAsset"/> resources from given graph
+        /// </summary>
+        /// <param name="graph">Source graph</param>
         public static GraphAsset Create( GraphModel graph )
         {
             var ret = CreateInstance<GraphAsset>();

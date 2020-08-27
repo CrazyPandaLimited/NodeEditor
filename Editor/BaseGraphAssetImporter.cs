@@ -11,10 +11,19 @@ using UnityEngine;
 
 namespace CrazyPanda.UnityCore.NodeEditor
 {
+    /// <summary>
+    /// Base class for asset importer for a <see cref="IGraphType"/>
+    /// </summary>
     public abstract class BaseGraphAssetImporter : ScriptedImporter
     {
+        /// <summary>
+        /// File extension to import
+        /// </summary>
         public abstract string Extension { get; }
 
+        /// <summary>
+        /// Type of window to use as editor
+        /// </summary>
         public abstract Type EditorWindowType { get; }
 
         public override void OnImportAsset( AssetImportContext ctx )
@@ -29,6 +38,13 @@ namespace CrazyPanda.UnityCore.NodeEditor
             ctx.SetMainObject( graphAsset );
         }
 
+        /// <summary>
+        /// Creates new graph asset using Unity's usual workflow
+        /// </summary>
+        /// <param name="graph">Graph to store in a new asset</param>
+        /// <param name="defaultName">Default name to show in UI</param>
+        /// <param name="icon">Icon to show on asset file</param>
+        /// <param name="resourceFile"></param>
         public static void CreateNewGraphAsset(GraphModel graph, string defaultName, Texture2D icon = null, string resourceFile = null)
         {
             var graphCreateAction = ScriptableObject.CreateInstance<NewGraphAction>();

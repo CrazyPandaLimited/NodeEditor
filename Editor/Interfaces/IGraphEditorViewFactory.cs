@@ -7,6 +7,9 @@ using UnityEngine.UIElements;
 
 namespace CrazyPanda.UnityCore.NodeEditor
 {
+    /// <summary>
+    /// Creates View objects for nodes and connections
+    /// </summary>
     public interface IGraphEditorViewFactory
     {
         /// <summary>

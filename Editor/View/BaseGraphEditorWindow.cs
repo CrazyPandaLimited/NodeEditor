@@ -4,6 +4,9 @@ using UnityEngine;
 
 namespace CrazyPanda.UnityCore.NodeEditor
 {
+    /// <summary>
+    /// Base class for GraphEditor window
+    /// </summary>
     public class BaseGraphEditorWindow : EditorWindow
     {
         [SerializeField] private string _graphAssetGuid; // store guid, not path to prevent errors when moving assets
@@ -11,6 +14,9 @@ namespace CrazyPanda.UnityCore.NodeEditor
         private GraphModel _graph;
         private BaseGraphEditorView _graphEditorView;
 
+        /// <summary>
+        /// Guid of opened asset
+        /// </summary>
         public string GraphAssetGuid => _graphAssetGuid;
 
         private void OnEnable()
@@ -30,6 +36,10 @@ namespace CrazyPanda.UnityCore.NodeEditor
             }
         }
 
+        /// <summary>
+        /// Loads graph from given asset guid
+        /// </summary>
+        /// <param name="graphAssetGuid">Guid of a <see cref="GraphAsset"/></param>
         public void LoadGraph( string graphAssetGuid )
         {
             _graphAssetGuid = graphAssetGuid;
@@ -39,6 +49,9 @@ namespace CrazyPanda.UnityCore.NodeEditor
             titleContent = new GUIContent( Path.GetFileNameWithoutExtension( AssetDatabase.GUIDToAssetPath( _graphAssetGuid ) ) );
         }
 
+        /// <summary>
+        /// Saves current <see cref="GraphAsset"/>
+        /// </summary>
         public void SaveGraph()
         {
             if( _graphAssetGuid != null && _graph != null )
@@ -52,6 +65,15 @@ namespace CrazyPanda.UnityCore.NodeEditor
             }
         }
 
+        /// <summary>
+        /// Creates <see cref="BaseGraphEditorView"/> for editing <see cref="GraphAsset"/>.
+        /// Override this to create custom view
+        /// </summary>
+        protected virtual BaseGraphEditorView CreateEditorView()
+        {
+            return new BaseGraphEditorView();
+        }
+
         private void ShowInProject()
         {
             if( _graphAssetGuid != null )
@@ -60,11 +82,6 @@ namespace CrazyPanda.UnityCore.NodeEditor
                 var asset = AssetDatabase.LoadAssetAtPath<UnityEngine.Object>( path );
                 EditorGUIUtility.PingObject( asset );
             }
-        }
-
-        protected virtual BaseGraphEditorView CreateEditorView()
-        {
-            return new BaseGraphEditorView();
         }
     }
 }

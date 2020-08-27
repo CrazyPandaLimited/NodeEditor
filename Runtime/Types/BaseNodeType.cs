@@ -5,6 +5,10 @@ using System.Reflection;
 
 namespace CrazyPanda.UnityCore.NodeEditor
 {
+    /// <summary>
+    /// Base implementation of<see cref="INodeType"/>.
+    /// Supports attribute based definition of ports.
+    /// </summary>
     public class BaseNodeType : INodeType
     {
         private static PortModel[] _emptyPorts = new PortModel[ 0 ];

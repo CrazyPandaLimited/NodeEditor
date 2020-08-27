@@ -1,4 +1,4 @@
-using System;
+﻿using System;
 using System.Collections.Generic;
 using System.Linq;
 using UnityEditor.Experimental.GraphView;
@@ -7,7 +7,7 @@ using UnityEngine.UIElements;
 
 namespace CrazyPanda.UnityCore.NodeEditor
 {
-    public sealed class NodesCopyPasteHelper
+    sealed class NodesCopyPasteHelper
     {
         private Vector2 _currentMousePosition;
         private readonly BaseGraphView _graphView;

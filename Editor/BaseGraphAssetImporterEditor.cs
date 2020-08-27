@@ -11,6 +11,9 @@ using UnityEngine;
 
 namespace CrazyPanda.UnityCore.NodeEditor
 {
+    /// <summary>
+    /// Base class for Unity inspector of custom graph asset importer
+    /// </summary>
     [CustomEditor( typeof( BaseGraphAssetImporter ), true )]
     public class BaseGraphAssetImporterEditor : ScriptedImporterEditor
     {

@@ -8,6 +8,9 @@ using UnityEngine.UIElements;
 
 namespace CrazyPanda.UnityCore.NodeEditor
 {
+    /// <summary>
+    /// View that allows to edit a collection of items
+    /// </summary>
     public class CollectionField : VisualElement
     {
         private FieldInfo _field;
@@ -16,6 +19,9 @@ namespace CrazyPanda.UnityCore.NodeEditor
 
         private Foldout _foldout;
 
+        /// <summary>
+        /// Field that stores editing collection
+        /// </summary>
         public FieldInfo Field
         {
             get => _field;
@@ -26,6 +32,9 @@ namespace CrazyPanda.UnityCore.NodeEditor
             }
         }
 
+        /// <summary>
+        /// Object that owns editing collection
+        /// </summary>
         public object CollectionOwner
         {
             get => _propertyBlock;
@@ -36,8 +45,14 @@ namespace CrazyPanda.UnityCore.NodeEditor
             }
         }
 
+        /// <summary>
+        /// Called when collection is changed
+        /// </summary>
         public event Action<CollectionField> Changed;
 
+        /// <summary>
+        /// Editing collection
+        /// </summary>
         public IList List => _field?.GetValue( _propertyBlock ) as IList;
 
         public CollectionField()

@@ -7,8 +7,18 @@ using UnityEngine;
 
 namespace CrazyPanda.UnityCore.NodeEditor
 {
+    /// <summary>
+    /// Calback that is fired when changes happen in a graph
+    /// </summary>
+    /// <param name="addedNodes">Collection of nodes that were added to graph</param>
+    /// <param name="removedNodes">Collection of nodes that were removed from graph</param>
+    /// <param name="addedConnections">Collection of connections that were added to graph</param>
+    /// <param name="removedConnections">Collection of connections that were removed from graph</param>
     public delegate void GraphChangedCalback( IReadOnlyList<NodeModel> addedNodes, IReadOnlyList<NodeModel> removedNodes, IReadOnlyList<ConnectionModel> addedConnections, IReadOnlyList<ConnectionModel> removedConnections );
 
+    /// <summary>
+    /// Model of a graph. Contains nodes and connections between them
+    /// </summary>
     public sealed class GraphModel
     {
         private static readonly IReadOnlyList<NodeModel> _emptyNodes = new NodeModel[ 0 ];
@@ -18,29 +28,58 @@ namespace CrazyPanda.UnityCore.NodeEditor
         private List<ConnectionModel> _connections = new List<ConnectionModel>();
         private ChangeSet _changeSet;
 
+        /// <summary>
+        /// Type of graph
+        /// </summary>
         public IGraphType Type { get; }
 
+        /// <summary>
+        /// Collection of nodes
+        /// </summary>
         public IReadOnlyList<NodeModel> Nodes => _nodes;
+
+        /// <summary>
+        /// Collection of connections
+        /// </summary>
         public IReadOnlyList<ConnectionModel> Connections => _connections;
 
+        /// <summary>
+        /// Event that is fired when changes happen in a graph
+        /// </summary>
         public event GraphChangedCalback GraphChanged;
 
+        /// <summary>
+        /// Constructor
+        /// </summary>
+        /// <param name="type">Type of graph</param>
         public GraphModel( IGraphType type )
         {
             Type = type ?? throw new ArgumentNullException( nameof( type ) );
         }
 
+        /// <summary>
+        /// Adds a node to a graph
+        /// </summary>
+        /// <param name="node">Node to add</param>
+        /// <exception cref="ArgumentNullException">When <paramref name="node"/> is null</exception>
+        /// <exception cref="ArgumentException">When <paramref name="node"/> is already added to a graph</exception>
         public void AddNode( NodeModel node )
         {
             if( node == null )
                 throw new ArgumentNullException( nameof( node ) );
 
-            if( _nodes.Contains( node ) )
+            if( node.Graph != null || _nodes.Contains( node ) )
                 throw new ArgumentException( $"Node '{node}' already added to graph" );
 
             DoAddNode( node );
         }
 
+        /// <summary>
+        /// Removes a node from a graph. Also removes all of its connections
+        /// </summary>
+        /// <param name="node">Node to remove</param>
+        /// <exception cref="ArgumentNullException">When <paramref name="node"/> is null</exception>
+        /// <exception cref="ArgumentException">When <paramref name="node"/> is not found in this graph</exception>
         public void RemoveNode( NodeModel node )
         {
             if( node == null )
@@ -71,6 +110,13 @@ namespace CrazyPanda.UnityCore.NodeEditor
             }
         }
 
+        /// <summary>
+        /// Checks whether two given ports can be connected
+        /// </summary>
+        /// <param name="from">Port where connection starts</param>
+        /// <param name="to">Port where connection ends/param>
+        /// <returns>True if these ports can be connected</returns>
+        /// <exception cref="ArgumentNullException">When any of ports is null</exception>
         public bool CanConnect( PortModel from, PortModel to )
         {
             if( from == null )
@@ -102,6 +148,14 @@ namespace CrazyPanda.UnityCore.NodeEditor
             return true;
         }
 
+        /// <summary>
+        /// Connects two given ports
+        /// </summary>
+        /// <param name="from">Port where connection starts</param>
+        /// <param name="to">Port where connection ends/param>
+        /// <returns>Connection between given ports</returns>
+        /// <exception cref="ArgumentNullException">When any of ports is null</exception>
+        /// <exception cref="InvalidOperationException">When these ports cannot be connected</exception>
         public ConnectionModel Connect( PortModel from, PortModel to )
         {
             if( from == null )
@@ -162,6 +216,12 @@ namespace CrazyPanda.UnityCore.NodeEditor
             }
         }
 
+        /// <summary>
+        /// Removes connection from a graph
+        /// </summary>
+        /// <param name="connection">Connection to remove</param>
+        /// <exception cref="ArgumentNullException">When <paramref name="connection"/> is null</exception>
+        /// <exception cref="InvalidOperationException">When <paramref name="connection"/> not found in this graph</exception>
         public void Disconnect( ConnectionModel connection )
         {
             if( connection == null )
@@ -182,6 +242,11 @@ namespace CrazyPanda.UnityCore.NodeEditor
             }
         }
 
+        /// <summary>
+        /// Starts batch change operation.
+        /// All changes made to a graph before returned <see cref="IDisposable"/> is disposed will be batched to single call of <see cref="GraphChanged"/>
+        /// </summary>
+        /// <returns>Objec to be disposed when batch is completed</returns>
         public IDisposable BeginChangeSet()
         {
             if( _changeSet != null )
@@ -189,185 +254,6 @@ namespace CrazyPanda.UnityCore.NodeEditor
 
             _changeSet = new ChangeSet( this );
             return _changeSet;
-        }
-
-        public IGraphExecutionResult Execute( Action<INodeExecutionContext> nodeAction, Action<IConnectionExecutionContext> connectionAction = null )
-        {
-            if( nodeAction == null )
-                throw new ArgumentNullException( nameof( nodeAction ) );
-
-            var ctx = new GraphExecutionContext();
-
-            // nothing to do if we have no nodes
-            if( _nodes.Count == 0 )
-                return ctx;
-
-            var nodesToCheck = new Queue<NodeModel>( _nodes.Where( n => !n.InputPorts().Any() ) );
-            if( nodesToCheck.Count == 0 )
-            {
-                Debug.LogError( "Cannot walk graph! All of its nodes have inputs" );
-                return ctx;
-            }
-
-            var fulfilledConnections = new HashSet<ConnectionModel>();
-
-            while( nodesToCheck.Count > 0 )
-            {
-                var node = nodesToCheck.Dequeue();
-
-                ctx.Node = node;
-
-                try
-                {
-                    nodeAction.Invoke( ctx );
-                    ctx.ValidateOutputs();
-                }
-                catch( Exception e )
-                {
-                    ctx.AddException( e );
-                }
-                
-                var outputConnections = node.OutputConnections();
-
-                // mark connected nodes' ports as fulfilled
-                foreach( var connection in outputConnections )
-                {
-                    ctx.Connection = connection;
-
-                    try
-                    {
-                        connectionAction?.Invoke( ctx );
-                    }
-                    catch( Exception e )
-                    {
-                        ctx.AddException( e );
-                    }
-
-                    fulfilledConnections.Add( connection );
-                }
-
-                // find new nodes, that can be added to queue
-                foreach( var connection in outputConnections )
-                {
-                    var connectedNode = connection.To.Node;
-
-                    var inputConnections = connectedNode.InputConnections();
-
-                    // check if all input ports are connected and all input connections are fulfilled
-                    if( connectedNode.InputPorts().All( p => p.Connections.Count > 0 ) &&
-                        inputConnections.All( c => fulfilledConnections.Contains( c ) ) )
-                    {
-                        nodesToCheck.Enqueue( connectedNode );
-
-                        foreach( var inConnection in inputConnections )
-                        {
-                            fulfilledConnections.Remove( inConnection );
-                        }
-                    }
-                }
-            }
-
-            if( fulfilledConnections.Count > 0 )
-            {
-                Debug.LogError( "Some nodes have unfulfilled connections!" );
-            }
-
-            ctx.Node = null;
-            ctx.Connection = null;
-            return ctx;
-        }
-
-        public Task<IGraphExecutionResult> ExecuteAsync( Func<INodeExecutionContext, Task> nodeAction, Func<IConnectionExecutionContext, Task> connectionAction = null )
-        {
-            if( nodeAction == null )
-                throw new ArgumentNullException( nameof( nodeAction ) );
-
-            return ExecuteAsyncInner( nodeAction, connectionAction );
-        }
-
-        private async Task<IGraphExecutionResult> ExecuteAsyncInner( Func<INodeExecutionContext, Task> nodeAction, Func<IConnectionExecutionContext, Task> connectionAction )
-        {
-            var ctx = new GraphExecutionContext();
-
-            // nothing to do if we have no nodes
-            if( _nodes.Count == 0 )
-                return ctx;
-
-            var nodesToCheck = new Queue<NodeModel>( _nodes.Where( n => !n.InputPorts().Any() ) );
-            if( nodesToCheck.Count == 0 )
-            {
-                Debug.LogError( "Cannot walk graph! All of its nodes have inputs" );
-                return ctx;
-            }
-
-            var fulfilledConnections = new HashSet<ConnectionModel>();
-
-            while( nodesToCheck.Count > 0 )
-            {
-                var node = nodesToCheck.Dequeue();
-
-                ctx.Node = node;
-
-                try
-                {
-                    await nodeAction.Invoke( ctx );
-                    ctx.ValidateOutputs();
-                }
-                catch( Exception e )
-                {
-                    ctx.AddException( e );
-                }
-
-                var outputConnections = node.OutputConnections();
-
-                // mark connected nodes' ports as fulfilled
-                foreach( var connection in outputConnections )
-                {
-                    if( connectionAction != null )
-                    {
-                        ctx.Connection = connection;
-                        try
-                        {
-                            await connectionAction.Invoke( ctx );
-                        }
-                        catch( Exception e )
-                        {
-                            ctx.AddException( e );
-                        }
-                    }
-
-                    fulfilledConnections.Add( connection );
-                }
-
-                // find new nodes, that can be added to queue
-                foreach( var connection in outputConnections )
-                {
-                    var connectedNode = connection.To.Node;
-
-                    var inputConnections = connectedNode.InputConnections();
-
-                    // check if all input ports are connected and all input connections are fulfilled
-                    if( connectedNode.InputPorts().All( p => p.Connections.Count > 0 ) &&
-                        inputConnections.All( c => fulfilledConnections.Contains( c ) ) )
-                    {
-                        nodesToCheck.Enqueue( connectedNode );
-
-                        foreach( var inConnection in inputConnections )
-                        {
-                            fulfilledConnections.Remove( inConnection );
-                        }
-                    }
-                }
-            }
-
-            if( fulfilledConnections.Count > 0 )
-            {
-                Debug.LogError( "Some nodes have unfulfilled connections!" );
-            }
-
-            ctx.Node = null;
-            ctx.Connection = null;
-            return ctx;
         }
 
         private void DoAddNode( NodeModel node )

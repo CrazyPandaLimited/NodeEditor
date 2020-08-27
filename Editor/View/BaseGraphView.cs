@@ -10,6 +10,9 @@ using UnityEngine.UIElements;
 
 namespace CrazyPanda.UnityCore.NodeEditor
 {
+    /// <summary>
+    /// Base class for Graph view
+    /// </summary>
     public class BaseGraphView : GraphView
     {
         private readonly IGraphEditorViewFactory _editorViewFactory;
@@ -17,12 +20,22 @@ namespace CrazyPanda.UnityCore.NodeEditor
         private GridBackground _background;
         private Label _graphTypeLabel;
 
-        protected GraphModel _graph;
+        private GraphModel _graph;
 
+        /// <summary>
+        /// Current opened <see cref="GraphModel"/>
+        /// </summary>
         public GraphModel Graph => _graph;
 
+        /// <summary>
+        /// Called when elements selected or unselected
+        /// </summary>
         public event Action<IReadOnlyList<ISelectable>> SelectionChanged;
 
+        /// <summary>
+        /// Constructor
+        /// </summary>
+        /// <param name="editorViewFactory">Factory to use for creating additional views</param>
         public BaseGraphView( IGraphEditorViewFactory editorViewFactory )
         {
             styleSheets.Add( Resources.Load<StyleSheet>( "Styles/BaseGraphView" ) );
@@ -42,6 +55,10 @@ namespace CrazyPanda.UnityCore.NodeEditor
             graphViewChanged += OnGraphViewChanged;
         }
 
+        /// <summary>
+        /// Loads new <see cref="GraphModel"/>
+        /// </summary>
+        /// <param name="graph">Graph to load</param>
         public void LoadGraph( GraphModel graph )
         {
             if( _graph != null )

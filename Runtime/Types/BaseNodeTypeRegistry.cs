@@ -7,6 +7,10 @@ using System.Threading.Tasks;
 
 namespace CrazyPanda.UnityCore.NodeEditor
 {
+    /// <summary>
+    /// Base implementation of <see cref="INodeTypeRegistry"/>.
+    /// Scans loaded assemblies for types implementing <see cref="INodeType"/>
+    /// </summary>
     public abstract class BaseNodeTypeRegistry : INodeTypeRegistry
     {
         private Lazy<IReadOnlyList<INodeType>> _allNodes;
@@ -50,6 +54,10 @@ namespace CrazyPanda.UnityCore.NodeEditor
             return ret;
         }
 
+        /// <summary>
+        /// Returns true if this assembly should be scanned
+        /// </summary>
+        /// <param name="asm">Assembly to check</param>
         protected virtual bool ShouldProcessAssembly( Assembly asm )
         {
             if( ExcludeEditorAssemblies && asm.GetReferencedAssemblies().Any( a => a.Name.Contains( "UnityEditor" ) ) )
@@ -58,6 +66,10 @@ namespace CrazyPanda.UnityCore.NodeEditor
             return true;
         }
 
+        /// <summary>
+        /// Returns true if this type should be added to collection
+        /// </summary>
+        /// <param name="type">Type to check</param>
         protected virtual bool ShouldProcessType( Type type )
         {
             return true;

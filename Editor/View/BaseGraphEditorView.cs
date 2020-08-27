@@ -11,12 +11,18 @@ using UnityEngine.UIElements;
 
 namespace CrazyPanda.UnityCore.NodeEditor
 {
+    /// <summary>
+    /// Base class for GraphEditor view
+    /// </summary>
     public class BaseGraphEditorView : VisualElement, IGraphEditorViewFactory
     {
         private BaseGraphView _graphView;
 
         private GraphModel _graph;
 
+        /// <summary>
+        /// <see cref="GraphModel"/> that is displayed by this view
+        /// </summary>
         public GraphModel Graph
         {
             get { return _graph; }
@@ -29,13 +35,29 @@ namespace CrazyPanda.UnityCore.NodeEditor
             }
         }
 
+        /// <summary>
+        /// View used to display graph
+        /// </summary>
         public BaseGraphView GraphView => _graphView;
 
+        /// <summary>
+        /// Owning window
+        /// </summary>
         public EditorWindow Window { get; set; }
 
+        /// <summary>
+        /// Toolbar view
+        /// </summary>
         public Toolbar Toolbar { get; }
 
+        /// <summary>
+        /// Called when user requests to save
+        /// </summary>
         public event Action SaveRequested;
+
+        /// <summary>
+        /// Called when user requests to view asset in Project tab
+        /// </summary>
         public event Action ShowInProjectRequested;
 
         public BaseGraphEditorView()
@@ -72,21 +94,40 @@ namespace CrazyPanda.UnityCore.NodeEditor
             _graphView.MarkDirtyRepaint();
         }
 
+        /// <summary>
+        /// Creates new <see cref="BaseNodeView"/> for a <see cref="NodeModel"/>.
+        /// Override this to create custom view
+        /// </summary>
+        /// <param name="node">Node that needs a view</param>
+        /// <param name="edgeConnectorListener">Edge connector listener needed to create a view</param>
         public virtual BaseNodeView CreateNodeView( NodeModel node, IEdgeConnectorListener edgeConnectorListener )
         {
             return new BaseNodeView( node, edgeConnectorListener );
         }
-
+        
+        /// <summary>
+        /// Creates new <see cref="BaseConnectionView"/> for a <see cref="ConnectionModel"/>.
+        /// Override this to create custom view
+        /// </summary>
+        /// <param name="connection">Connection that needs view</param>
         public virtual BaseConnectionView CreateConnectionView( ConnectionModel connection )
         {
             return new BaseConnectionView( connection );
         }
 
+        /// <summary>
+        /// Creates new <see cref="BaseGraphView"/>.
+        /// Override this to create custom view
+        /// </summary>
+        /// <returns></returns>
         protected virtual BaseGraphView CreateGraphView()
         {
             return new BaseGraphView( this );
         }
 
+        /// <summary>
+        /// Called after new graph was loaded
+        /// </summary>
         protected virtual void OnGraphLoaded()
         {
         }
