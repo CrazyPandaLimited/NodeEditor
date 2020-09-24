@@ -1,49 +1,49 @@
-﻿#properties-view Label.unity-base-field__label {
-    min-width: 130px;
+#properties-view Label.unity-base-field__label {
+    min-width: 130;
 }
 
 #properties-view .unity-foldout--depth-0 Label.unity-base-field__label {
-    min-width: 115px;
+    min-width: 115;
 }
 
 #properties-view .unity-foldout--depth-1 Label.unity-base-field__label {
-    min-width: 100px;
+    min-width: 100;
 }
 
 #properties-view #collection-row > .unity-base-field Label.unity-base-field__label {
-    min-width: 20px;
+    min-width: 20;
 }
 
 #properties-view Button {
-    padding: 0px;
-    margin: 1px;
+    padding: 0;
+    margin: 1;
 }
 
 #properties-view {
-    padding: 4px;
+    padding: 4;
 }
 
 #properties-view .unity-text-element, #properties-view .unity-base-field__input {
-    font-size: 12px;
+    font-size: 12;    
 }
 
 #properties-view .unity-base-field .unity-base-field__input {
-    min-width: 120px;
+    min-width: 120;
 }
 
 #properties-view .unity-base-field {
-    margin-bottom: 5px;
+    margin-bottom: 5;
 }
 
 #node-border #contents {
     background-color: #363636;
-    max-width: 500px;
-    min-width: 140px;
+    max-width: 500;
+    min-width: 140;
 }
 
 #properties-toggle {
-    width: 56px;
-    height: 16px;
+    width: 56;
+    height: 16;
     align-self: flex-start;
     flex-direction: row;
     justify-content: center;    

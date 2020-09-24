@@ -7,10 +7,12 @@ namespace CrazyPanda.UnityCore.NodeEditor
     /// <summary>
     /// Base class for GraphEditor window
     /// </summary>
-    public class BaseGraphEditorWindow : EditorWindow
+    public class BaseGraphEditorWindow : EditorWindow, ISerializationCallbackReceiver
     {
         [SerializeField] private string _graphAssetGuid; // store guid, not path to prevent errors when moving assets
-
+        [ SerializeField ]
+        private string _serializedGraph = string.Empty;
+        
         private GraphModel _graph;
         private BaseGraphEditorView _graphEditorView;
 
@@ -30,12 +32,22 @@ namespace CrazyPanda.UnityCore.NodeEditor
 
             rootVisualElement.Add( _graphEditorView );
 
-            if( _graphAssetGuid != null )
+            LoadGraph();
+        }
+
+        public void OnBeforeSerialize()
+        {
+            if( _graph != null )
             {
-                LoadGraph( _graphAssetGuid );
+                _serializedGraph = GraphSerializer.Serialize( _graph );
             }
         }
 
+        public void OnAfterDeserialize()
+        {
+            
+        }
+        
         /// <summary>
         /// Loads graph from given asset guid
         /// </summary>
@@ -46,7 +58,7 @@ namespace CrazyPanda.UnityCore.NodeEditor
             _graph = GraphSerializer.DeserializeFromGuid( _graphAssetGuid );
             _graphEditorView.Graph = _graph;
 
-            titleContent = new GUIContent( Path.GetFileNameWithoutExtension( AssetDatabase.GUIDToAssetPath( _graphAssetGuid ) ) );
+            SetWindowTitle();
         }
 
         /// <summary>
@@ -81,6 +93,35 @@ namespace CrazyPanda.UnityCore.NodeEditor
                 var path = AssetDatabase.GUIDToAssetPath( _graphAssetGuid );
                 var asset = AssetDatabase.LoadAssetAtPath<UnityEngine.Object>( path );
                 EditorGUIUtility.PingObject( asset );
+            }
+        }
+
+        private void LoadGraph()
+        {
+            if( !string.IsNullOrEmpty( _serializedGraph ) )
+            {
+                LoadSerializedGraph();
+            }
+            else if( _graphAssetGuid != null )
+            {
+                LoadGraph( _graphAssetGuid );
+            }
+        }
+        
+        private void LoadSerializedGraph()
+        {
+            _graph = GraphSerializer.Deserialize( _serializedGraph );
+           _graphEditorView.Graph = _graph;
+           _serializedGraph = string.Empty;
+
+           SetWindowTitle();
+        }
+        
+        private void SetWindowTitle()
+        {
+            if( !string.IsNullOrEmpty( _graphAssetGuid ) )
+            {
+                titleContent = new GUIContent( Path.GetFileNameWithoutExtension( AssetDatabase.GUIDToAssetPath( _graphAssetGuid ) ) );
             }
         }
     }
