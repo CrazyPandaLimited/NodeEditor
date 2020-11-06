@@ -11,8 +11,6 @@ namespace CrazyPanda.UnityCore.NodeEditor
     /// </summary>
     public class BaseNodeType : INodeType
     {
-        private static PortModel[] _emptyPorts = new PortModel[ 0 ];
-
         private List<PortDescription> _collectedPorts;
 
         public virtual string Name => GetType().Name.Replace( "Type", "" );
