@@ -35,6 +35,8 @@ namespace CrazyPanda.UnityCore.NodeEditor
             portName = ObjectNames.NicifyVariableName( port.Id );
             m_EdgeConnector = CreateEdgeConnector( edgeConnectorListener );
             this.AddManipulator( m_EdgeConnector );
+
+            tooltip = port.Type.ToString();
         }
 
         protected virtual EdgeConnector CreateEdgeConnector( IEdgeConnectorListener edgeConnectorListener )
