@@ -49,6 +49,25 @@ namespace CrazyPanda.UnityCore.NodeEditor.Tests
             Assert.That( v1.Value, Is.EqualTo( "test" ) );
         }
 
+        [Test]
+        public void Execute_Should_Succeed_SingleNode_Cached()
+        {
+            var graph = new GraphModel( GraphModelTests.GraphTypeWithConnections );
+            var nodeType = new SourceNode( "test" );
+            var node = nodeType.CreateNode();
+            graph.AddNode( node );
+
+            var result = graph.Execute( ExecuteNode );
+            result = graph.Execute( ExecuteNode ); // this line will take value from cache
+
+            Assert.That( result, Is.Not.Null );
+
+            var v1 = GetPortValue<string>( nodeType.Out, result, node );
+
+            Assert.That( v1.HasValue, Is.True );
+            Assert.That( v1.Value, Is.EqualTo( "test" ) );
+        }
+
         [AsyncTest]
         public async Task ExecuteAsync_Should_Succeed_SingleNode()
         {
@@ -58,6 +77,25 @@ namespace CrazyPanda.UnityCore.NodeEditor.Tests
             graph.AddNode( node );
 
             var result = await graph.ExecuteAsync( ExecuteNodeAsync );
+
+            Assert.That( result, Is.Not.Null );
+
+            var v1 = GetPortValue<string>( nodeType.Out, result, node );
+
+            Assert.That( v1.HasValue, Is.True );
+            Assert.That( v1.Value, Is.EqualTo( "test" ) );
+        }
+
+        [AsyncTest]
+        public async Task ExecuteAsync_Should_Succeed_SingleNode_Cached()
+        {
+            var graph = new GraphModel( GraphModelTests.GraphTypeWithConnections );
+            var nodeType = new SourceNode( "test" );
+            var node = nodeType.CreateNode();
+            graph.AddNode( node );
+
+            var result = await graph.ExecuteAsync( ExecuteNodeAsync );
+            result = await graph.ExecuteAsync( ExecuteNodeAsync ); // this line will take value from cache
 
             Assert.That( result, Is.Not.Null );
 

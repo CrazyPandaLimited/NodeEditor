@@ -1,13 +1,16 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Linq;
+using System.Runtime.CompilerServices;
 using System.Threading.Tasks;
-using UnityEngine;
 
 namespace CrazyPanda.UnityCore.NodeEditor
 {
     public static class ExecuteExtensions
     {
+        // cached storage of execution list for graphs. optimization for faster execution of same graph
+        private static readonly ConditionalWeakTable< GraphModel, IReadOnlyList< object > > _executionLists = new ConditionalWeakTable< GraphModel, IReadOnlyList< object > >();
+
         /// <summary>
         /// Walks graph starting from nodes without inputs and then follows connections from them.
         /// Calls <paramref name="nodeAction"/> on every node and <paramref name="connectionAction"/> on every connection.
@@ -28,80 +31,34 @@ namespace CrazyPanda.UnityCore.NodeEditor
                 throw new ArgumentNullException( nameof( nodeAction ) );
 
             var ctx = new GraphExecutionContext();
-            var nodes = graph.Nodes;
+            var executionList = GetExecutionList( graph );
 
-            // nothing to do if we have no nodes
-            if( nodes.Count == 0 )
-                return ctx;
-
-            var nodesToCheck = new Queue< NodeModel >( nodes.Where( n => !n.InputPorts().Any() ) );
-            if( nodesToCheck.Count == 0 )
+            for( int i = 0, k = executionList.Count; i < k; ++i )
             {
-                Debug.LogError( "Cannot walk graph! All of its nodes have inputs" );
-                return ctx;
-            }
-
-            var fulfilledConnections = new HashSet< ConnectionModel >();
-
-            while( nodesToCheck.Count > 0 )
-            {
-                var node = nodesToCheck.Dequeue();
-
-                ctx.Node = node;
-
                 try
                 {
-                    nodeAction.Invoke( ctx );
-                    ctx.ValidateOutputs();
+                    switch( executionList[ i ] )
+                    {
+                        case NodeModel node:
+                        {
+                            ctx.Node = node;
+                            nodeAction.Invoke( ctx );
+                            ctx.ValidateOutputs();
+                            break;
+                        }
+
+                        case ConnectionModel connection:
+                        {
+                            ctx.Connection = connection;
+                            connectionAction?.Invoke( ctx );
+                            break;
+                        }
+                    }
                 }
                 catch( Exception e )
                 {
                     ctx.AddException( e );
                 }
-
-                var outputConnections = node.OutputConnections();
-
-                // mark connected nodes' ports as fulfilled
-                foreach( var connection in outputConnections )
-                {
-                    ctx.Connection = connection;
-
-                    try
-                    {
-                        connectionAction?.Invoke( ctx );
-                    }
-                    catch( Exception e )
-                    {
-                        ctx.AddException( e );
-                    }
-
-                    fulfilledConnections.Add( connection );
-                }
-
-                // find new nodes, that can be added to queue
-                foreach( var connection in outputConnections )
-                {
-                    var connectedNode = connection.To.Node;
-
-                    var inputConnections = connectedNode.InputConnections();
-
-                    // check if all input ports are connected and all input connections are fulfilled
-                    if( connectedNode.InputPorts().All( p => p.Connections.Count > 0 ) &&
-                        inputConnections.All( c => fulfilledConnections.Contains( c ) ) )
-                    {
-                        nodesToCheck.Enqueue( connectedNode );
-
-                        foreach( var inConnection in inputConnections )
-                        {
-                            fulfilledConnections.Remove( inConnection );
-                        }
-                    }
-                }
-            }
-
-            if( fulfilledConnections.Count > 0 )
-            {
-                Debug.LogError( "Some nodes have unfulfilled connections!" );
             }
 
             ctx.Node = null;
@@ -134,55 +91,85 @@ namespace CrazyPanda.UnityCore.NodeEditor
         private static async Task< IGraphExecutionResult > ExecuteAsyncInner( GraphModel graph, Func< INodeExecutionContext, Task > nodeAction, Func< IConnectionExecutionContext, Task > connectionAction )
         {
             var ctx = new GraphExecutionContext();
-            var nodes = graph.Nodes;
+            var executionList = GetExecutionList( graph );
 
-            // nothing to do if we have no nodes
-            if( nodes.Count == 0 )
-                return ctx;
-
-            var nodesToCheck = new Queue< NodeModel >( nodes.Where( n => !n.InputPorts().Any() ) );
-            if( nodesToCheck.Count == 0 )
+            for( int i = 0, k = executionList.Count; i < k; ++i )
             {
-                Debug.LogError( "Cannot walk graph! All of its nodes have inputs" );
-                return ctx;
-            }
-
-            var fulfilledConnections = new HashSet< ConnectionModel >();
-
-            while( nodesToCheck.Count > 0 )
-            {
-                var node = nodesToCheck.Dequeue();
-
-                ctx.Node = node;
-
                 try
                 {
-                    await nodeAction.Invoke( ctx );
-                    ctx.ValidateOutputs();
+                    switch( executionList[ i ] )
+                    {
+                        case NodeModel node:
+                        {
+                            ctx.Node = node;
+                            await nodeAction.Invoke( ctx );
+                            ctx.ValidateOutputs();
+                            break;
+                        }
+
+                        case ConnectionModel connection:
+                        {
+                            ctx.Connection = connection;
+                            await connectionAction?.Invoke( ctx );
+                            break;
+                        }
+                    }
                 }
                 catch( Exception e )
                 {
                     ctx.AddException( e );
                 }
+            }
+
+            ctx.Node = null;
+            ctx.Connection = null;
+            return ctx;
+        }
+
+        private static IReadOnlyList< object > GetExecutionList( GraphModel graph )
+        {
+            // check if it is not already in cache
+            if( !_executionLists.TryGetValue( graph, out var list ) )
+            {
+                // subscribe for changes in graph
+                graph.GraphChanged += OnGraphModelChanged;
+
+                //build new list and store in cache
+                list = BuildExecutionList( graph );
+                _executionLists.Add( graph, list );
+            }
+
+            return list;
+        }
+
+        private static IReadOnlyList< object > BuildExecutionList( GraphModel graph )
+        {
+            var nodes = graph.Nodes;
+            if( nodes.Count == 0 )
+                return Array.Empty< object >();
+
+            var nodesToCheck = new Queue< NodeModel >( nodes.Where( n => !n.InputPorts().Any() ) );
+            if( nodesToCheck.Count == 0 )
+            {
+                throw new InvalidOperationException( "Cannot walk graph! All of its nodes have inputs" );
+            }
+
+            var connections = graph.Connections;
+            var ret = new object[ nodes.Count + connections.Count ];
+            var fulfilledConnections = new HashSet< ConnectionModel >();
+
+            int indexer = 0;
+            while( nodesToCheck.Count > 0 )
+            {
+                var node = nodesToCheck.Dequeue();
+                ret[ indexer++ ] = node;
 
                 var outputConnections = node.OutputConnections();
 
                 // mark connected nodes' ports as fulfilled
                 foreach( var connection in outputConnections )
                 {
-                    if( connectionAction != null )
-                    {
-                        ctx.Connection = connection;
-                        try
-                        {
-                            await connectionAction.Invoke( ctx );
-                        }
-                        catch( Exception e )
-                        {
-                            ctx.AddException( e );
-                        }
-                    }
-
+                    ret[ indexer++ ] = connection;
                     fulfilledConnections.Add( connection );
                 }
 
@@ -209,12 +196,22 @@ namespace CrazyPanda.UnityCore.NodeEditor
 
             if( fulfilledConnections.Count > 0 )
             {
-                Debug.LogError( "Some nodes have unfulfilled connections!" );
+                throw new InvalidOperationException( "Cannot walk graph! Some nodes have unfulfilled connections!" );
             }
 
-            ctx.Node = null;
-            ctx.Connection = null;
-            return ctx;
+            return ret;
+        }
+
+        private static void OnGraphModelChanged( IReadOnlyList< NodeModel > addedNodes, IReadOnlyList< NodeModel > removedNodes, IReadOnlyList< ConnectionModel > addedConnections, IReadOnlyList< ConnectionModel > removedConnections )
+        {
+            // one of this conditions will always return valid Graph
+            var graph = addedNodes?.FirstOrDefault()?.Graph ??
+                        removedNodes?.FirstOrDefault()?.Graph ??
+                        addedConnections?.FirstOrDefault()?.From?.Node?.Graph ??
+                        removedConnections?.FirstOrDefault()?.From?.Node?.Graph;
+
+            _executionLists.Remove( graph );
+            graph.GraphChanged -= OnGraphModelChanged;
         }
     }
 }
