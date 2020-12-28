@@ -13,7 +13,7 @@ namespace CrazyPanda.UnityCore.NodeEditor.Tests
             var node = new NodeModel( nodeType );
 
             Assert.That( node.Type, Is.EqualTo( nodeType ) );
-            nodeType.Received().InitModel( node );
+            nodeType.Received().Init( node );
         }
 
         [Test]

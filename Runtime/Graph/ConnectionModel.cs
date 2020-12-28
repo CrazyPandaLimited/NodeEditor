@@ -3,7 +3,7 @@
     /// <summary>
     /// Connection between two ports
     /// </summary>
-    public sealed class ConnectionModel
+    public sealed class ConnectionModel : IConnection
     {
         private PortModel _from;
         private PortModel _to;

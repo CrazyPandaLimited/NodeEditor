@@ -1,24 +1,22 @@
 ﻿using System;
-using System.Collections.Generic;
 using System.Linq;
-using UnityEngine;
 
 namespace CrazyPanda.UnityCore.NodeEditor
 {
     /// <summary>
     /// Node in a graph
     /// </summary>
-    public class NodeModel
+    public class NodeModel : BaseNode<NodeModel, PortModel>
     {
         private string _id;
-        private List<PortModel> _ports = new List<PortModel>();
         private PropertyBlock _propertyBlock;
         private GraphModel _graph;
+        private INodeType _type;
 
         /// <summary>
         /// Unique id of a node
         /// </summary>
-        public string Id
+        public override string Id
         {
             get => _id;
             set => this.SetOnce( ref _id, value );
@@ -27,7 +25,11 @@ namespace CrazyPanda.UnityCore.NodeEditor
         /// <summary>
         /// Type of a node
         /// </summary>
-        public INodeType Type { get; }
+        public INodeType Type
+        {
+            get => _type;
+            set => this.SetOnceOrNull( ref _type, value );
+        }
 
         /// <summary>
         /// Owning graph or null
@@ -39,148 +41,102 @@ namespace CrazyPanda.UnityCore.NodeEditor
         }
 
         /// <summary>
-        /// Collection of ports
-        /// </summary>
-        public IReadOnlyList<PortModel> Ports
-        {
-            get => _ports;
-        }
-
-        /// <summary>
-        /// Position of a node view inside graph
-        /// </summary>
-        public Vector2 Position { get; set; }
-
-        /// <summary>
         /// Custom properties associated with this node. Initialized by <see cref="INodeType"/>
         /// </summary>
-        public PropertyBlock PropertyBlock
+        public override PropertyBlock PropertyBlock
         {
             get => _propertyBlock;
             set => this.SetOnce( ref _propertyBlock, value );
         }
 
-        /// <summary>
-        /// Fired when <see cref="Ports"/> collection changes
-        /// </summary>
-        public event Action<NodePortsChangedArgs> PortsChanged;
+        public override void AddPort( IPort port )
+        {
+            switch( port )
+            {
+                case PortModel portModel: 
+                    AddPort( portModel );
+                    break;
+                case SPort sPort:
+                    AddPort( sPort );
+                    break;
+            }
+        }
+
+        public override void RemovePort( IPort port )
+        {
+            switch( port )
+            {
+                case PortModel portModel: 
+                    RemovePort( portModel );
+                    break;
+                case SPort sPort:
+                    RemovePort( sPort );
+                    break;
+            }
+        }
+
+        public NodeModel()
+        {
+            base.PortsChanged += OnPortsChanged;
+        }
 
         /// <summary>
         /// Constructor
         /// </summary>
         /// <param name="type">Type of a node</param>
-        public NodeModel( INodeType type )
+        public NodeModel( INodeType type ) : this()
         {
             Type = type ?? throw new ArgumentNullException( nameof( type ) );
-            Type.InitModel( this );
+            Type.Init( this );
+        }
+        
+        protected override bool NeedToAddPort( PortModel port )
+        {
+            if( port.Node != null || _ports.Any( p => DoesPortExists( p, port.Id ) ) )
+                throw new ArgumentException( $"Port with id {port.Id} already added to node {port.Node ?? this}", nameof(port) );
+
+            return true;
         }
 
-        /// <summary>
-        /// Adds new port to a node
-        /// </summary>
-        /// <param name="port">New port</param>
-        /// <exception cref="ArgumentNullException">When <paramref name="port"/> is null</exception>
-        /// <exception cref="ArgumentException">When <paramref name="port"/> is already added to a node</exception>
-        public void AddPort( PortModel port )
+        protected override bool DoesPortExists( PortModel portModel, string portId )
         {
-            if( port == null )
-                throw new ArgumentNullException( nameof( port ) );
-
-            if( port.Node != null || _ports.Find( p => p.Id == port.Id ) != null )
-                throw new ArgumentException( $"Port with id {port.Id} already added to node {port.Node ?? this}", nameof( port ) );
-
-            _ports.Add( port );
-            port.Node = this;
-
-            PortsChanged?.Invoke( new NodePortsChangedArgs( this, true, port ) );
-        }
-
-        /// <summary>
-        /// Removes port from a node
-        /// </summary>
-        /// <param name="portId">Id of port to remove</param>
-        /// <exception cref="ArgumentNullException">When <paramref name="portId"/> is null</exception>
-        public void RemovePort( string portId )
-        {
-            if( portId == null )
-                throw new ArgumentNullException( nameof( portId ) );
-
-            var portIdx = _ports.FindIndex( p => p.Id == portId );
-
-            if( portIdx == -1 )
-                return;
-
-            var port = _ports[ portIdx ];
-
-            foreach( var c in port.Connections.ToArray() )
-            {
-                Graph.Disconnect( c );
-            }
-
-            _ports.RemoveAt( portIdx );
-            port.Node = null;
-
-            PortsChanged?.Invoke( new NodePortsChangedArgs( this, false, port ) );
-        }
-
-        /// <summary>
-        /// Removes port from a node
-        /// </summary>
-        /// <param name="port">Port to remove</param>
-        /// <exception cref="ArgumentNullException">When <paramref name="port"/> is null</exception>
-        /// <exception cref="ArgumentException">When <paramref name="port"/> is not found in this node</exception>
-        public void RemovePort( PortModel port )
-        {
-            if( port == null )
-                throw new ArgumentNullException( nameof( port ) );
-
-            if( !_ports.Remove( port ) )
-                throw new ArgumentException( $"Port {port} not found in node {this}", nameof( port ) );
-
-            foreach( var c in port.Connections.ToArray() )
-            {
-                Graph.Disconnect( c );
-            }
-
-            port.Node = null;
-
-            PortsChanged?.Invoke( new NodePortsChangedArgs( this, false, port ) );
+            return portModel.Id == portId;
         }
 
         public override string ToString() => $"{Type.Name}. Id: {Id}";
 
-        /// <summary>
-        /// Args of <see cref="PortsChanged"/> event
-        /// </summary>
-        public struct NodePortsChangedArgs
+        private void OnPortsChanged( NodePortsChangedArgs portsChangedArgs )
         {
-            /// <summary>
-            /// Node that was changed
-            /// </summary>
-            public NodeModel Node { get; }
-
-            /// <summary>
-            /// Whether the port was added or removed
-            /// </summary>
-            public bool IsAdded { get; }
-
-            /// <summary>
-            /// Port that was added or removed
-            /// </summary>
-            public PortModel Port { get; }
-
-            /// <summary>
-            /// Constructor
-            /// </summary>
-            /// <param name="node">Node that was changed</param>
-            /// <param name="isAdded">Whether the port was added or removed</param>
-            /// <param name="port">Port that was added or removed</param>
-            public NodePortsChangedArgs( NodeModel node, bool isAdded, PortModel port )
+            if( portsChangedArgs.IsAdded )
             {
-                Node = node;
-                IsAdded = isAdded;
-                Port = port;
+                portsChangedArgs.Port.Node = this;
             }
+            else
+            {
+                foreach( var c in portsChangedArgs.Port.Connections.ToArray() ) 
+                {
+                    Graph.Disconnect( c );
+                }
+
+                portsChangedArgs.Port.Node = null;
+            }
+        }
+
+        public static implicit operator NodeModel( SNode sNode )
+        {
+            var node = new NodeModel
+            {
+                Type = sNode.NodeType,
+                Id = sNode.Id,
+                PropertyBlock = sNode.PropertyBlock
+            };
+
+            foreach( var port in sNode.Ports )
+            {
+                node.AddPort( port );
+            }
+
+            return node;
         }
     }
 }

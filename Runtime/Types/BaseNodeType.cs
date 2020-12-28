@@ -15,12 +15,12 @@ namespace CrazyPanda.UnityCore.NodeEditor
 
         public virtual string Name => GetType().Name.Replace( "Type", "" );
 
-        void INodeType.InitModel( NodeModel node )
+        void INodeType.Init( INode node )
         {
             node.PropertyBlock = CreatePropertyBlock( node );
         }
 
-        void INodeType.PostLoad( NodeModel node )
+        void INodeType.PostLoad( INode node )
         {
             if( node.Id == null )
                 node.Id = Guid.NewGuid().ToString();
@@ -28,7 +28,7 @@ namespace CrazyPanda.UnityCore.NodeEditor
             CreatePorts( node );
         }
 
-        protected virtual void CreatePorts( NodeModel node )
+        protected virtual void CreatePorts( INode node )
         {
             if( _collectedPorts == null )
                 CollectPortsFromProperties();
@@ -43,7 +43,7 @@ namespace CrazyPanda.UnityCore.NodeEditor
             }
         }
 
-        protected virtual PropertyBlock CreatePropertyBlock( NodeModel node )
+        protected virtual PropertyBlock CreatePropertyBlock( INode node )
         {
             return new PropertyBlock();
         }

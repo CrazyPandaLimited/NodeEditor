@@ -8,12 +8,12 @@ namespace CrazyPanda.UnityCore.NodeEditor
     /// </summary>
     public class BaseConnectionView : Edge
     {
-        private ConnectionModel _connection;
+        private SConnection _connection;
 
         /// <summary>
-        /// Associated <see cref="ConnectionModel"/>
+        /// Associated <see cref="SConnection"/>
         /// </summary>
-        public ConnectionModel Connection
+        public SConnection Connection
         {
             get => _connection;
             set => this.SetOnce( ref _connection, value );
@@ -28,8 +28,8 @@ namespace CrazyPanda.UnityCore.NodeEditor
         /// <summary>
         /// Constructor
         /// </summary>
-        /// <param name="connection"><see cref="ConnectionModel"/> for this view</param>
-        public BaseConnectionView( ConnectionModel connection )
+        /// <param name="connection"><see cref="SConnection"/> for this view</param>
+        public BaseConnectionView( SConnection connection )
         {
             Connection = connection;
         }

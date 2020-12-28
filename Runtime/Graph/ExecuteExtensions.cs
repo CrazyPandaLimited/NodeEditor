@@ -132,7 +132,7 @@ namespace CrazyPanda.UnityCore.NodeEditor
             if( !_executionLists.TryGetValue( graph, out var list ) )
             {
                 // subscribe for changes in graph
-                graph.GraphChanged += OnGraphModelChanged;
+                graph.GraphChanged +=  OnGraphModelChanged;
 
                 //build new list and store in cache
                 list = BuildExecutionList( graph );

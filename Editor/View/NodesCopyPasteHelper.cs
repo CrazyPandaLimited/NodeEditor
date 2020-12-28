@@ -29,7 +29,7 @@ namespace CrazyPanda.UnityCore.NodeEditor
         {
             try
             {
-                return GraphSerializer.DeserializeToSGraph( data ) != null;
+                return GraphSerializer.DeserializeSGraph( data ) != null;
             }
             catch
             {
@@ -40,10 +40,10 @@ namespace CrazyPanda.UnityCore.NodeEditor
         private string SerializeGraphElements( IEnumerable< GraphElement > elements )
         {
             var nodes = elements.OfType< BaseNodeView >().ToDictionary( node=> node.Node.Id, node => node );
-            var connections = elements.OfType< BaseConnectionView >().Where( view => nodes.ContainsKey( view.Connection.From.Node.Id ) && 
-                                                                                     nodes.ContainsKey( view.Connection.To.Node.Id ) );
+            var connections = elements.OfType< BaseConnectionView >().Where( view => nodes.ContainsKey( view.Connection.FromNodeId ) && 
+                                                                                     nodes.ContainsKey( view.Connection.ToNodeId ) );
 
-            return GraphSerializer.SerializeSGraph( CreateGraphToSerialize( nodes.Values, connections ) );
+            return GraphSerializer.Serialize( CreateGraphToSerialize( nodes.Values, connections ) );
         }
 
         private void UnserializeAndPaste( string operationName, string data )
@@ -53,22 +53,32 @@ namespace CrazyPanda.UnityCore.NodeEditor
 
         private void PasteNewNodes( string rawData )
         {
-            GraphSerializer.SGraph graph = GraphSerializer.DeserializeToSGraph( rawData );
+            SGraph graph = GraphSerializer.DeserializeSGraph( rawData );
 
             GenerateNewNodeIds( graph );
             UpdateNodesPosition( graph );
             
-            graph.AddContentsToGraph( _graphView.Graph );
+            foreach( var node in graph.Nodes )
+            {
+                _graphView.Graph.AddNode( node );
+            }
+            
+            foreach( var connection in graph.Connections )
+            {
+                _graphView.Graph.AddConnection( connection );
+            }
         }
         
-        private void GenerateNewNodeIds( GraphSerializer.SGraph graph )
+        private void GenerateNewNodeIds( SGraph graph )
         {
             foreach( var node in graph.Nodes )
             {
                 var newNodeId = Guid.NewGuid().ToString();
-                var fromConnections = graph.Connections.Where( connection => connection.FromNodeId == node.Id );
-                var toConnections = graph.Connections.Where( connection => connection.ToNodeId == node.Id );
+                var fromConnections = graph.Connections.Where( connection => connection.FromNodeId == node.Id ).ToArray();
+                var toConnections = graph.Connections.Where( connection => connection.ToNodeId == node.Id ).ToArray();
 
+                node.Id = newNodeId;
+                
                 foreach( var fromConnection in fromConnections )
                 {
                     fromConnection.FromNodeId = newNodeId;
@@ -78,12 +88,17 @@ namespace CrazyPanda.UnityCore.NodeEditor
                 {
                     toConnection.ToNodeId = newNodeId;
                 }
-                
-                node.Id = newNodeId;
+
+                foreach( var port in node.Ports )
+                {
+                    port.NodeId = newNodeId;
+                    port.Connections.Clear();
+                    port.Connections.AddRange( graph.GetConnections( port ) );
+                }
             }
         }
         
-        private void UpdateNodesPosition(GraphSerializer.SGraph graph)
+        private void UpdateNodesPosition(SGraph graph)
         {
             var mouseLocalPosition = _graphView.contentViewContainer.WorldToLocal(_currentMousePosition);
 
@@ -95,27 +110,27 @@ namespace CrazyPanda.UnityCore.NodeEditor
             }
         }
         
-        private Vector2 FindSelectedNodesTopLeftCorner( IEnumerable< GraphSerializer.SNode > nodes )
+        private Vector2 FindSelectedNodesTopLeftCorner( IEnumerable< SNode > nodes )
         {
             var x = nodes.Min( node => node.Position.x );
             var y = nodes.Min( node => node.Position.y );
             return new Vector2( x, y );
         }
 
-        private GraphSerializer.SGraph CreateGraphToSerialize( IEnumerable< BaseNodeView > nodes, IEnumerable< BaseConnectionView > connections )
+        private SGraph CreateGraphToSerialize( IEnumerable< BaseNodeView > nodes, IEnumerable< BaseConnectionView > connections )
         {
-            var sgraph = new GraphSerializer.SGraph { Type = _graphView.Graph.Type.GetType().FullName };
+            var sgraph = new SGraph { Type = _graphView.Graph.Type };
            
             foreach( var nodeModel in nodes )
             {
-                GraphSerializer.SNode sNode = nodeModel.Node;
+                SNode sNode = nodeModel.Node;
                 sNode.Position = nodeModel.localBound.min;
-                sgraph.Nodes.Add( sNode );
+                sgraph.AddNode( sNode );
             }
 
             foreach( var connectionModel in connections )
             {
-                sgraph.Connections.Add( connectionModel.Connection );
+                sgraph.AddConnection( connectionModel.Connection );
             }
 
             return sgraph;

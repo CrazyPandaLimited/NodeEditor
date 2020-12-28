@@ -4,45 +4,66 @@ using System.IO;
 using System.Linq;
 using System.Text;
 using Newtonsoft.Json;
-using UnityEngine;
 
 namespace CrazyPanda.UnityCore.NodeEditor
 {
     public static class GraphSerializer
     {
-        private static DefaultTypeResolver _staticResolver = new DefaultTypeResolver();
+        internal static DefaultTypeResolver StaticResolver { get; } = new DefaultTypeResolver();
 
         public static string Serialize( GraphModel graph )
         {
             if( graph == null )
                 throw new ArgumentNullException( nameof( graph ) );
 
-            var sgraph = new SGraph { Type = _staticResolver.GetTypeName( graph.Type ) };
+            var sgraph = new SGraph { Type = StaticResolver.GetTypeName( graph.Type ) };
 
             foreach( var nodeModel in graph.Nodes )
             {
-                sgraph.Nodes.Add( nodeModel );
+                sgraph.AddNode( nodeModel );
             }
 
             foreach( var connectionModel in graph.Connections )
             {
-                sgraph.Connections.Add( connectionModel );
+                sgraph.AddConnection( connectionModel );
             }
 
-            return SerializeSGraph( sgraph );
+            return Serialize( sgraph );
         }
         
-        public static string SerializeSGraph( SGraph graph )
+        public static string Serialize( SGraph graph )
         {
             if( graph == null )
                 throw new ArgumentNullException( nameof( graph ) );
 
+            foreach( var node in graph.Nodes )
+            {
+                var typeResolver = graph.GraphType as IGraphTypeResolver ?? StaticResolver;
+                node.Type = typeResolver.GetTypeName( node.NodeType ) ?? throw new InvalidOperationException( $"Cannot resolve name for node {node}" );
+                node.Properties = JsonConvert.SerializeObject( node.PropertyBlock );
+            }
+
             return JsonConvert.SerializeObject( graph, Formatting.Indented );
         }
 
-        public static SGraph DeserializeToSGraph( string data )
+        public static SGraph DeserializeSGraph( string data )
         {
-            return JsonConvert.DeserializeObject< SGraph >( data );
+            var graph = JsonConvert.DeserializeObject< SGraph >( data );
+            var nodeResolver = graph.GraphType as IGraphTypeResolver ?? StaticResolver;
+
+            foreach( var n in graph.Nodes )
+            {
+                n.NodeType = nodeResolver.GetInstance< INodeType >( n.Type ) ?? throw new InvalidOperationException( $"Node type {n.Type ?? "<null>"} not found!" );
+                n.NodeType.Init( n );
+                JsonConvert.PopulateObject( n.Properties, n.PropertyBlock );
+                n.NodeType.PostLoad( n );
+                foreach( var port in n.Ports )
+                {
+                    port.Connections.AddRange( graph.GetConnections( port ) );
+                }
+            }
+            
+            return graph;
         }
 
         public static GraphModel Deserialize( string data, List<SConnection> brokenConnections = null )
@@ -50,14 +71,12 @@ namespace CrazyPanda.UnityCore.NodeEditor
             if( data == null )
                 throw new ArgumentNullException( nameof( data ) );
 
-            SGraph sgraph = DeserializeToSGraph( data );
-            var graphType = _staticResolver.GetInstance< IGraphType >( sgraph.Type ) ?? throw new InvalidOperationException( $"Graph type {sgraph.Type ?? "<null>"} not found!" );
-            
-            var ret = new GraphModel( graphType );
+            SGraph sgraph = DeserializeSGraph( data );
+            var ret = new GraphModel( sgraph.GraphType );
 
             sgraph.AddContentsToGraph( ret, brokenConnections );
             
-            graphType.PostLoad( ret );
+            ret.Type.PostLoad( ret );
 
             return ret;
         }
@@ -74,103 +93,22 @@ namespace CrazyPanda.UnityCore.NodeEditor
 #endif
         }
 
+        public static SGraph DeserializeSGraphFromGuid( string assetGuid )
+        {
+#if UNITY_EDITOR
+            var path = UnityEditor.AssetDatabase.GUIDToAssetPath( assetGuid );
+            var graphText = File.ReadAllText( path, Encoding.UTF8 );
+
+            return DeserializeSGraph( graphText );
+#else
+            throw new InvalidOperationException( $"{nameof(DeserializeFromGuid)} may be called only from editor" );
+#endif
+        }
+
         public static void AddContentsToGraph( this SGraph graph, GraphModel graphModel, List<SConnection> brokenConnections = null )
         {
-            var graphType = _staticResolver.GetInstance< IGraphType >( graph.Type ) ?? throw new InvalidOperationException( $"Graph type {graph.Type ?? "<null>"} not found!" );
-            var nodeResolver = graphType as IGraphTypeResolver ?? _staticResolver;
-
-            foreach( var n in graph.Nodes )
-            {
-                var nodeType = nodeResolver.GetInstance< INodeType >( n.Type ) ?? throw new InvalidOperationException( $"Node type {n.Type ?? "<null>"} not found!" );
-
-                var node = new NodeModel( nodeType )
-                {
-                    Id = n.Id,
-                    Position = n.Position
-                };
-
-                JsonConvert.PopulateObject( n.Properties, node.PropertyBlock );
-
-                nodeType.PostLoad( node );
-
-                graphModel.AddNode( node );
-            }
-            
-            foreach( var c in graph.Connections )
-            {
-                var fromNode = graphModel.Nodes.FirstOrDefault( n => n.Id == c.FromNodeId );
-                var toNode = graphModel.Nodes.FirstOrDefault( n => n.Id == c.ToNodeId );
-
-                var fromPort = fromNode?.Ports?.FirstOrDefault( p => p.Id == c.FromPortId );
-                var toPort = toNode?.Ports?.FirstOrDefault( p => p.Id == c.ToPortId );
-
-                if( fromPort != null && toPort != null && fromPort.Direction != toPort.Direction )
-                {
-                    if( fromPort.Direction == PortDirection.Output )
-                        graphModel.Connect( fromPort, toPort );
-                    else
-                        graphModel.Connect( toPort, fromPort );
-                }
-                else
-                {
-                    brokenConnections?.Add( c );
-                }
-            }
-        }
-        
-        [Serializable]
-        public class SGraph
-        {
-            public string Type;
-
-            public List<SNode> Nodes = new List<SNode>();
-            public List<SConnection> Connections = new List<SConnection>();
-        }
-
-        [Serializable]
-        public class SNode
-        {
-            public string Type;
-
-            public string Id;
-            public Vector2 Position = default;
-
-            public string Properties;
-
-            public static implicit operator SNode( NodeModel node )
-            {
-                var typeResolver = node.Graph.Type as IGraphTypeResolver ?? _staticResolver;
-                var typeName = typeResolver.GetTypeName( node.Type ) ?? throw new InvalidOperationException( $"Cannot resolve name for node {node}" );
-
-                return new SNode
-                {
-                    Id = node.Id,
-                    Type = typeName,
-                    Position = node.Position,
-                    Properties = JsonConvert.SerializeObject( node.PropertyBlock ),
-                };
-            }
-        }
-
-        [Serializable]
-        public class SConnection
-        {
-            public string FromNodeId;
-            public string FromPortId;
-
-            public string ToNodeId;
-            public string ToPortId;
-
-            public static implicit operator SConnection( ConnectionModel connection )
-            {
-                return new SConnection
-                {
-                    FromNodeId = connection.From.Node.Id, 
-                    FromPortId = connection.From.Id, 
-                    ToNodeId = connection.To.Node.Id, 
-                    ToPortId = connection.To.Id,
-                };
-            }
+            graphModel.AddNodes( graph.Nodes );
+            graphModel.AddConnections( graph.Connections, brokenConnections );
         }
     }
 }

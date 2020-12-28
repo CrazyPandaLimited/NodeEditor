@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.Reflection;
 
 namespace CrazyPanda.UnityCore.NodeEditor
 {
@@ -9,6 +10,7 @@ namespace CrazyPanda.UnityCore.NodeEditor
     class DefaultTypeResolver : IGraphTypeResolver
     {
         private readonly Dictionary< string, object > _instances = new Dictionary< string, object >();
+        private readonly Lazy< Assembly[] > _assemblies = new Lazy< Assembly[] >( () => AppDomain.CurrentDomain.GetAssemblies() );
 
         public T GetInstance< T >( string typeName )
             where T : class
@@ -45,13 +47,12 @@ namespace CrazyPanda.UnityCore.NodeEditor
             return instance.GetType().FullName;
         }
 
-        private Type FindType( string typeName )
+        public Type FindType( string typeName )
         {
             if( string.IsNullOrEmpty( typeName ) )
                 return null;
 
-            var assemblies = AppDomain.CurrentDomain.GetAssemblies();
-            foreach( var assembly in assemblies )
+            foreach( var assembly in _assemblies.Value )
             {
                 var type = assembly.GetType( typeName );
                 if( type != null )

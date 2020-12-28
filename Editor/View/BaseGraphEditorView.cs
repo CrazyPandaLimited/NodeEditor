@@ -1,8 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
 using UnityEditor;
 using UnityEditor.Experimental.GraphView;
 using UnityEditor.UIElements;
@@ -17,13 +15,19 @@ namespace CrazyPanda.UnityCore.NodeEditor
     public class BaseGraphEditorView : VisualElement, IGraphEditorViewFactory
     {
         private BaseGraphView _graphView;
+        private readonly SGraphToGraphContentConverter _sGraphToGraphContentConverter = new SGraphToGraphContentConverter();
 
-        private GraphModel _graph;
+        private SGraph _graph;
 
         /// <summary>
         /// <see cref="GraphModel"/> that is displayed by this view
         /// </summary>
-        public GraphModel Graph
+        public GraphModel GraphModel => _sGraphToGraphContentConverter.GraphModel;
+
+        /// <summary>
+        /// <see cref="SGraph"/> that is displayed by this view
+        /// </summary>
+        public SGraph Graph
         {
             get { return _graph; }
             set
@@ -31,10 +35,12 @@ namespace CrazyPanda.UnityCore.NodeEditor
                 _graph = value;
                 _graphView.LoadGraph( _graph );
 
+                _sGraphToGraphContentConverter.SetGraph( value );
+                
                 OnGraphLoaded();
             }
         }
-
+        
         /// <summary>
         /// View used to display graph
         /// </summary>
@@ -100,7 +106,7 @@ namespace CrazyPanda.UnityCore.NodeEditor
         /// </summary>
         /// <param name="node">Node that needs a view</param>
         /// <param name="edgeConnectorListener">Edge connector listener needed to create a view</param>
-        public virtual BaseNodeView CreateNodeView( NodeModel node, IEdgeConnectorListener edgeConnectorListener )
+        public virtual BaseNodeView CreateNodeView( SNode node, IEdgeConnectorListener edgeConnectorListener )
         {
             return new BaseNodeView( node, edgeConnectorListener );
         }
@@ -110,7 +116,7 @@ namespace CrazyPanda.UnityCore.NodeEditor
         /// Override this to create custom view
         /// </summary>
         /// <param name="connection">Connection that needs view</param>
-        public virtual BaseConnectionView CreateConnectionView( ConnectionModel connection )
+        public virtual BaseConnectionView CreateConnectionView( SConnection connection )
         {
             return new BaseConnectionView( connection );
         }
@@ -137,26 +143,24 @@ namespace CrazyPanda.UnityCore.NodeEditor
             var port = ((obj.target as BaseConnectionView)?.output as BasePortView)?.Port;
 
             var searchWindowProvider = ScriptableObject.CreateInstance<SearchWindowProvider>();
-            searchWindowProvider.Init( _graph.Type, port, NodeCreationRequested );
+            searchWindowProvider.Init( _graph.GraphType, port, NodeCreationRequested );
 
             SearchWindow.Open( new SearchWindowContext( obj.screenMousePosition ), searchWindowProvider );
         }
 
         private bool NodeCreationRequested( SearchWindowResult result )
         {
-            var newNode = new NodeModel( result.NodeType );
-            result.NodeType.PostLoad( newNode );
-
             var windowRoot = Window.rootVisualElement;
             var windowMousePosition = windowRoot.ChangeCoordinatesTo( windowRoot.parent, result.ScreenPosition - Window.position.position );
             windowMousePosition.y -= windowRoot.worldBound.y; // compensate for window header
             var graphMousePosition = _graphView.contentViewContainer.WorldToLocal( windowMousePosition );
 
+            var newNode = result.Node;
             newNode.Position = graphMousePosition;
 
             using( _graph.BeginChangeSet() )
             {
-                _graph.AddNode( newNode );
+                _graph.AddNode( result.Node );
 
                 if( result.FromPort != null )
                 {

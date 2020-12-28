@@ -1,9 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
-using UnityEditor;
 using UnityEditor.Experimental.GraphView;
 using UnityEngine;
 using UnityEngine.UIElements;
@@ -20,12 +17,12 @@ namespace CrazyPanda.UnityCore.NodeEditor
         private GridBackground _background;
         private Label _graphTypeLabel;
 
-        private GraphModel _graph;
+        private SGraph _graph;
 
         /// <summary>
         /// Current opened <see cref="GraphModel"/>
         /// </summary>
-        public GraphModel Graph => _graph;
+        public SGraph Graph => _graph;
 
         /// <summary>
         /// Called when elements selected or unselected
@@ -56,10 +53,10 @@ namespace CrazyPanda.UnityCore.NodeEditor
         }
 
         /// <summary>
-        /// Loads new <see cref="GraphModel"/>
+        /// Loads new <see cref="SGraph"/>
         /// </summary>
         /// <param name="graph">Graph to load</param>
-        public void LoadGraph( GraphModel graph )
+        public void LoadGraph( SGraph graph )
         {
             if( _graph != null )
                 _graph.GraphChanged -= OnGraphChanged;
@@ -67,11 +64,11 @@ namespace CrazyPanda.UnityCore.NodeEditor
             _graph = graph ?? throw new ArgumentNullException( nameof( graph ) );
             _graph.GraphChanged += OnGraphChanged;
 
-            _graphTypeLabel.text = graph.Type.Name.ToUpper();
+            _graphTypeLabel.text = graph.GraphType.Name.ToUpper();
 
             DeleteElements( graphElements.ToList() );
 
-            OnGraphChanged( _graph.Nodes, new NodeModel[ 0 ], _graph.Connections, new ConnectionModel[ 0 ] );
+            OnGraphChanged( _graph.Nodes, new SNode[ 0 ], _graph.Connections, new SConnection[ 0 ] );
         }
 
         public override List<Port> GetCompatiblePorts( Port startPort, NodeAdapter nodeAdapter )
@@ -121,7 +118,7 @@ namespace CrazyPanda.UnityCore.NodeEditor
                 SelectionChanged?.Invoke( selection );
         }
 
-        private void OnGraphChanged( IReadOnlyList<NodeModel> addedNodes, IReadOnlyList<NodeModel> removedNodes, IReadOnlyList<ConnectionModel> addedConnections, IReadOnlyList<ConnectionModel> removedConnections )
+        private void OnGraphChanged( IReadOnlyList< SNode > addedNodes, IReadOnlyList< SNode > removedNodes, IReadOnlyList< SConnection > addedConnections, IReadOnlyList< SConnection > removedConnections )
         {
             foreach( var node in addedNodes )
                 AddElement( _editorViewFactory.CreateNodeView( node, _edgeConnectorListener ) );
@@ -130,7 +127,7 @@ namespace CrazyPanda.UnityCore.NodeEditor
 
             foreach( var connection in removedConnections )
             {
-                var graphConnection = elems.OfType<BaseConnectionView>().FirstOrDefault( c => c.Connection == connection );
+                var graphConnection = elems.OfType< BaseConnectionView >().FirstOrDefault( c => c.Connection.Equals( connection ) );
 
                 if( graphConnection != null )
                 {
@@ -148,11 +145,11 @@ namespace CrazyPanda.UnityCore.NodeEditor
             {
                 var connView = _editorViewFactory.CreateConnectionView( connection );
 
-                var fromNode = elems.OfType<BaseNodeView>().FirstOrDefault( n => n.Node == connection.From.Node );
-                var toNode = elems.OfType<BaseNodeView>().FirstOrDefault( n => n.Node == connection.To.Node );
+                var fromNode = elems.OfType<BaseNodeView>().FirstOrDefault( n => n.Node.Id == connection.FromNodeId );
+                var toNode = elems.OfType<BaseNodeView>().FirstOrDefault( n => n.Node.Id == connection.ToNodeId );
 
-                var outputPort = fromNode.Ports.FirstOrDefault( p => p.Port == connection.From );
-                var inputPort = toNode.Ports.FirstOrDefault( p => p.Port == connection.To );
+                var outputPort = fromNode.Ports.FirstOrDefault( p => p.Port.Id == connection.FromPortId );
+                var inputPort = toNode.Ports.FirstOrDefault( p => p.Port.Id == connection.ToPortId );
 
                 outputPort.Connect( connView );
                 inputPort.Connect( connView );
@@ -165,7 +162,7 @@ namespace CrazyPanda.UnityCore.NodeEditor
 
             foreach( var node in removedNodes )
             {
-                var graphNode = elems.OfType<BaseNodeView>().FirstOrDefault( n => n.Node == node );
+                var graphNode = elems.OfType<BaseNodeView>().FirstOrDefault( n => n.Node.Id == node.Id );
 
                 if( graphNode != null )
                 {

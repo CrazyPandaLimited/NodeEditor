@@ -17,7 +17,7 @@ namespace CrazyPanda.UnityCore.NodeEditor
         /// <summary>
         /// Associated port
         /// </summary>
-        public PortModel Port { get; }
+        public SPort Port { get; }
 
         /// <summary>
         /// Constructor
@@ -25,7 +25,7 @@ namespace CrazyPanda.UnityCore.NodeEditor
         /// <param name="port">Port that needs view</param>
         /// <param name="portOrientation">Orientation of port</param>
         /// <param name="edgeConnectorListener">Edge connector listener for a port</param>
-        public BasePortView( PortModel port, Orientation portOrientation, IEdgeConnectorListener edgeConnectorListener )
+        public BasePortView( SPort port, Orientation portOrientation, IEdgeConnectorListener edgeConnectorListener )
             : base( portOrientation,
                   port.Direction == PortDirection.Input ? Direction.Input : Direction.Output,
                   port.Capacity == PortCapacity.Multiple ? Capacity.Multi : Capacity.Single,
@@ -58,7 +58,7 @@ namespace CrazyPanda.UnityCore.NodeEditor
         /// <param name="port">Port that needs view</param>
         /// <param name="portOrientation">Orientation of port</param>
         /// <param name="edgeConnectorListener">Edge connector listener for a port</param>
-        public BasePortView( PortModel port, Orientation portOrientation, IEdgeConnectorListener edgeConnectorListener )
+        public BasePortView( SPort port, Orientation portOrientation, IEdgeConnectorListener edgeConnectorListener )
             : base( port, portOrientation, edgeConnectorListener )
         {
         }

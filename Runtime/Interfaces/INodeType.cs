@@ -11,15 +11,15 @@
         string Name { get; }
 
         /// <summary>
-        /// Init <see cref="NodeModel"/> during its construction
+        /// Init <see cref="INode"/> during its construction
         /// </summary>
-        /// <param name="connection">Node to init</param>
-        void InitModel( NodeModel node );
+        /// <param name="node">Node to init</param>
+        void Init( INode node );
 
         /// <summary>
-        /// Init <see cref="NodeModel"/> after it was loaded from serialized data
+        /// Init <see cref="INode"/> after it was loaded from serialized data
         /// </summary>
-        /// <param name="connection">Node to init</param>
-        void PostLoad( NodeModel node );
+        /// <param name="node">Node to init</param>
+        void PostLoad( INode node );
     }
 }

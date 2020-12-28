@@ -13,16 +13,16 @@ namespace CrazyPanda.UnityCore.NodeEditor
     public interface IGraphEditorViewFactory
     {
         /// <summary>
-        /// Creates view for <see cref="NodeModel" />
+        /// Creates view for <see cref="SNode" />
         /// </summary>
         /// <param name="node">Node Model</param>
         /// <param name="edgeConnectorListener">Listener to use for ports</param>
-        BaseNodeView CreateNodeView( NodeModel node, IEdgeConnectorListener edgeConnectorListener );
+        BaseNodeView CreateNodeView( SNode node, IEdgeConnectorListener edgeConnectorListener );
 
         /// <summary>
-        /// Creates view for <see cref="ConnectionModel"/>
+        /// Creates view for <see cref="SConnection"/>
         /// </summary>
         /// <param name="connection">Connection Model</param>
-        BaseConnectionView CreateConnectionView( ConnectionModel connection );
+        BaseConnectionView CreateConnectionView( SConnection connection );
     }
 }

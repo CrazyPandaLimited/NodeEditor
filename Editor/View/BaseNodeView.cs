@@ -21,7 +21,7 @@ namespace CrazyPanda.UnityCore.NodeEditor
         /// <summary>
         /// Associated node
         /// </summary>
-        public NodeModel Node { get; }
+        public SNode Node { get; }
 
         /// <summary>
         /// Listener used to create new connections.
@@ -39,14 +39,14 @@ namespace CrazyPanda.UnityCore.NodeEditor
         /// </summary>
         /// <param name="node">Node that needs view</param>
         /// <param name="edgeConnectorListener">Edge connector listener for this view</param>
-        public BaseNodeView( NodeModel node, IEdgeConnectorListener edgeConnectorListener )
+        public BaseNodeView( SNode node, IEdgeConnectorListener edgeConnectorListener )
         {
             styleSheets.Add( Resources.Load<StyleSheet>( "Styles/BaseNodeView" ) );
 
             Node = node;
             EdgeConnectorListener = edgeConnectorListener;
 
-            title = ObjectNames.NicifyVariableName( node.Type.Name );
+            title = ObjectNames.NicifyVariableName( node.NodeType.Name );
             base.SetPosition( new Rect( node.Position, Vector2.zero ) );
 
             foreach( var port in Node.Ports )
@@ -78,7 +78,7 @@ namespace CrazyPanda.UnityCore.NodeEditor
                 contents.Add( _propertiesExpander );
             }
 
-            Node.PortsChanged += OnNodePortsChanged;
+            Node.PortsChanged += NodeOnPortsChanged;
 
             RefreshPorts();
             RefreshExpandedState();
@@ -114,7 +114,7 @@ namespace CrazyPanda.UnityCore.NodeEditor
         /// Override this to create custom view
         /// </summary>
         /// <param name="port"></param>
-        protected virtual BasePortView CreatePortView( PortModel port )
+        protected virtual BasePortView CreatePortView( SPort port )
         {
             return new BasePortView( port, Orientation.Horizontal, EdgeConnectorListener );
         }
@@ -128,7 +128,7 @@ namespace CrazyPanda.UnityCore.NodeEditor
         {
         }
 
-        private void AddPort( PortModel port )
+        private void AddPort( SPort port )
         {
             var target = port.Direction == PortDirection.Input ? inputContainer : outputContainer;
             var portView = CreatePortView( port );
@@ -137,10 +137,10 @@ namespace CrazyPanda.UnityCore.NodeEditor
             _ports.Add( portView );
         }
 
-        private void RemovePort( PortModel port )
+        private void RemovePort( SPort port )
         {
             var target = port.Direction == PortDirection.Input ? inputContainer : outputContainer;
-            var portView = target.Children().OfType<BasePortView>().First( v => v.Port == port );
+            var portView = target.Children().OfType<BasePortView>().First( v => v.Port.Id == port.Id );
 
             target.Remove( portView );
             _ports.Remove( portView );
@@ -166,7 +166,7 @@ namespace CrazyPanda.UnityCore.NodeEditor
             RefreshExpandedState();
         }
 
-        private void OnNodePortsChanged( NodeModel.NodePortsChangedArgs args )
+        private void NodeOnPortsChanged( BaseNode< SNode, SPort >.NodePortsChangedArgs args )
         {
             if( args.IsAdded )
             {

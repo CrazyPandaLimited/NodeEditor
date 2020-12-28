@@ -44,7 +44,7 @@ namespace CrazyPanda.UnityCore.NodeEditor
     /// <summary>
     /// Port in a node that may be connected to other ports
     /// </summary>
-    public sealed class PortModel
+    public sealed class PortModel : IPort
     {
         private NodeModel _node;
 
@@ -81,6 +81,8 @@ namespace CrazyPanda.UnityCore.NodeEditor
         /// Collection of <see cref="ConnectionModel"/> connected to this port
         /// </summary>
         public IList<ConnectionModel> Connections { get; } = new List<ConnectionModel>();
+
+        IEnumerable< IConnection > IPort.Connections => Connections;
 
         /// <summary>
         /// Constructor
@@ -119,5 +121,10 @@ namespace CrazyPanda.UnityCore.NodeEditor
         }
 
         public override string ToString() => $"Port: {Id} ({Type.Name})";
+        
+        public static implicit operator PortModel( SPort port )
+        {
+            return new PortModel( port.Id, port.Type, port.Direction, port.Capacity );
+        }
     }
 }

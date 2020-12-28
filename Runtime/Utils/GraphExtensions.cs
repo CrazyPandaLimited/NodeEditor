@@ -1,7 +1,9 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Linq;
+using System.Threading;
 using System.Threading.Tasks;
+using Newtonsoft.Json;
 using UnityEngine;
 
 namespace CrazyPanda.UnityCore.NodeEditor
@@ -97,6 +99,64 @@ namespace CrazyPanda.UnityCore.NodeEditor
             var ret = new NodeModel( nodeType );
             nodeType.PostLoad( ret );
             return ret;
+        }
+        
+        public static void AddNodes( this GraphModel graphModel, IEnumerable< SNode > nodes )
+        {
+            foreach( var node in nodes )
+            {
+                graphModel.AddNode( node );
+            }
+        }
+
+        public static void AddConnections( this GraphModel graphModel, IEnumerable< SConnection > connections, List<SConnection> brokenConnections = null )
+        {
+            foreach( var c in connections )
+            {
+                var fromNode = graphModel.Nodes.FirstOrDefault( n => n.Id == c.FromNodeId );
+                var toNode = graphModel.Nodes.FirstOrDefault( n => n.Id == c.ToNodeId );
+
+                var fromPort = fromNode?.Ports?.FirstOrDefault( p => p.Id == c.FromPortId );
+                var toPort = toNode?.Ports?.FirstOrDefault( p => p.Id == c.ToPortId );
+
+                if( fromPort != null && toPort != null && fromPort.Direction != toPort.Direction )
+                {
+                    if( fromPort.Direction == PortDirection.Output )
+                        graphModel.Connect( fromPort, toPort );
+                    else
+                        graphModel.Connect( toPort, fromPort );
+                }
+                else
+                {
+                    brokenConnections?.Add( c );
+                }
+            }
+        }
+
+        public static void RemoveNodes( this GraphModel graph, IEnumerable< SNode > nodes )
+        {
+            foreach( var sNode in nodes )
+            {
+                var nodeToRemove = graph.Nodes.FirstOrDefault( node => node.Id == sNode.Id );
+
+                if( nodeToRemove != null )
+                {
+                    graph.RemoveNode( nodeToRemove );
+                }
+            }
+        }
+
+        public static void RemoveConnections( this GraphModel graph, IEnumerable< SConnection > connections )
+        {
+            foreach( var sConnection in connections )
+            {
+                var connectionToRemove = graph.Connections.FirstOrDefault( connection => sConnection.Equals( connection ));
+
+                if( connectionToRemove != null )
+                {
+                    graph.Disconnect( connectionToRemove );
+                }
+            }
         }
     }
 }

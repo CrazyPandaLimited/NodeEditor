@@ -9,20 +9,20 @@ namespace CrazyPanda.UnityCore.NodeEditor
 {
     struct SearchWindowResult
     {
-        public INodeType NodeType;
+        public SNode Node;
         public Vector2 ScreenPosition;
-        public PortModel FromPort;
+        public SPort FromPort;
     }
 
     class SearchWindowProvider : ScriptableObject, ISearchWindowProvider
     {
         private IGraphType _graphType;
-        private PortModel _fromPort;
+        private SPort _fromPort;
         private Func<SearchWindowResult, bool> _nodeCreationRequested;
 
         private List<SearchTreeEntry> _results = new List<SearchTreeEntry>();
 
-        public void Init( IGraphType graphType, PortModel fromPort, Func< SearchWindowResult, bool > nodeCreationRequested )
+        public void Init( IGraphType graphType, SPort fromPort, Func< SearchWindowResult, bool > nodeCreationRequested )
         {
             _graphType = graphType;
             _fromPort = fromPort;
@@ -38,7 +38,7 @@ namespace CrazyPanda.UnityCore.NodeEditor
             foreach( var nodeType in _graphType.AvailableNodes )
             {
                 // we need to create a node to know what ports it have
-                var newNode = nodeType.CreateNode();
+                SNode newNode = nodeType.CreateSNode();
 
                 // if we have _fromPort, check that we can connect it to any of the input ports in the newNode
                 if( _fromPort == null ||
@@ -48,7 +48,7 @@ namespace CrazyPanda.UnityCore.NodeEditor
                     var searchEntry = new SearchTreeEntry( content )
                     {
                         level = 1,
-                        userData = nodeType
+                        userData = newNode
                     };
 
                     _results.Add( searchEntry );
@@ -62,7 +62,7 @@ namespace CrazyPanda.UnityCore.NodeEditor
         {
             var searchResult = new SearchWindowResult
             {
-                NodeType = treeEntry.userData as INodeType,
+                Node = treeEntry.userData as SNode,
                 ScreenPosition = context.screenMousePosition,
                 FromPort = _fromPort,
             };

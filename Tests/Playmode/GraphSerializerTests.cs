@@ -83,7 +83,7 @@ namespace CrazyPanda.UnityCore.NodeEditor.Tests
         [Test]
         public void Serialize_Should_Throw_WhenNullGraph()
         {
-            Assert.That( () => GraphSerializer.Serialize( null ), Throws.ArgumentNullException );
+            Assert.That( () => GraphSerializer.Serialize( ( GraphModel ) null ), Throws.ArgumentNullException );
         }
 
         [Test]
@@ -95,7 +95,7 @@ namespace CrazyPanda.UnityCore.NodeEditor.Tests
         [Test]
         public void Deserialize_Should_Throw_WhenGraphTypeNotFound()
         {
-            var sgraph = new GraphSerializer.SGraph() { Type = "NonExistingType" };
+            var sgraph = new SGraph() { Type = "NonExistingType" };
             var str = JsonConvert.SerializeObject( sgraph );
 
             Assert.That( () => GraphSerializer.Deserialize( str ), Throws.InvalidOperationException );
@@ -104,9 +104,9 @@ namespace CrazyPanda.UnityCore.NodeEditor.Tests
         [Test]
         public void Deserialize_Should_Throw_WhenNodeTypeNotFound()
         {
-            var sgraph = new GraphSerializer.SGraph() { Type = typeof( GraphType ).FullName };
-            var snode = new GraphSerializer.SNode() { Type = "NonExistingType" };
-            sgraph.Nodes.Add( snode );
+            var sgraph = new SGraph() { Type = typeof( GraphType ).FullName };
+            var snode = new SNode() { Type = "NonExistingType" };
+            sgraph.AddNode( snode );
 
             var str = JsonConvert.SerializeObject( sgraph );
 
@@ -126,15 +126,15 @@ namespace CrazyPanda.UnityCore.NodeEditor.Tests
         [TestCase( "1", "_", "_", "_" )]
         public void Deserialize_Should_Return_BrokenConnections( string fromNodeId, string fromPortId, string toNodeId, string toPortId )
         {
-            var sgraph = new GraphSerializer.SGraph() { Type = typeof( GraphType ).FullName };
+            var sgraph = new SGraph() { Type = typeof( GraphType ).FullName };
 
-            var snode1 = new GraphSerializer.SNode() { Id = "1", Type = typeof( NodeWithProperties ).FullName, Properties = "{}" };
-            var snode2 = new GraphSerializer.SNode() { Id = "2", Type = typeof( NodeWithProperties ).FullName, Properties = "{}" };
+            var snode1 = new SNode() { Id = "1", Type = typeof( NodeWithProperties ).FullName, Properties = "{}" };
+            var snode2 = new SNode() { Id = "2", Type = typeof( NodeWithProperties ).FullName, Properties = "{}" };
 
-            sgraph.Nodes.Add( snode1 );
-            sgraph.Nodes.Add( snode2 );
+            sgraph.AddNode( snode1 );
+            sgraph.AddNode( snode2 );
 
-            var sconnection = new GraphSerializer.SConnection()
+            var sconnection = new SConnection()
             {
                 FromNodeId = fromNodeId,
                 FromPortId = fromPortId,
@@ -142,9 +142,9 @@ namespace CrazyPanda.UnityCore.NodeEditor.Tests
                 ToPortId = toPortId,
             };
 
-            sgraph.Connections.Add( sconnection );
+            sgraph.AddConnection( sconnection );
 
-            var brokenConnections = new List<GraphSerializer.SConnection>();
+            var brokenConnections = new List<SConnection>();
 
             var str = JsonConvert.SerializeObject( sgraph );
             GraphSerializer.Deserialize( str, brokenConnections );
@@ -161,16 +161,16 @@ namespace CrazyPanda.UnityCore.NodeEditor.Tests
         [Test]
         public void Deserialize_Should_Fix_ConnectionDirection()
         {
-            var sgraph = new GraphSerializer.SGraph() { Type = typeof( GraphType ).FullName };
+            var sgraph = new SGraph() { Type = typeof( GraphType ).FullName };
 
-            var snode1 = new GraphSerializer.SNode() { Id = "1", Type = typeof( NodeWithProperties ).FullName, Properties = "{}" };
-            var snode2 = new GraphSerializer.SNode() { Id = "2", Type = typeof( NodeWithProperties ).FullName, Properties = "{}" };
+            var snode1 = new SNode() { Id = "1", Type = typeof( NodeWithProperties ).FullName, Properties = "{}" };
+            var snode2 = new SNode() { Id = "2", Type = typeof( NodeWithProperties ).FullName, Properties = "{}" };
 
-            sgraph.Nodes.Add( snode1 );
-            sgraph.Nodes.Add( snode2 );
+            sgraph.AddNode( snode1 );
+            sgraph.AddNode( snode2 );
 
             // this connection has inverted direction: In -> Out
-            var sconnection = new GraphSerializer.SConnection()
+            var sconnection = new SConnection()
             {
                 FromNodeId = "2",
                 FromPortId = "In",
@@ -178,7 +178,7 @@ namespace CrazyPanda.UnityCore.NodeEditor.Tests
                 ToPortId = "Out",
             };
 
-            sgraph.Connections.Add( sconnection );
+            sgraph.AddConnection( sconnection );
 
             var str = JsonConvert.SerializeObject( sgraph );
             var graph = GraphSerializer.Deserialize( str );
@@ -225,9 +225,9 @@ namespace CrazyPanda.UnityCore.NodeEditor.Tests
         [Test]
         public void Deserialize_Should_Throw_WhenNodeTypeNotFound_ByCustomResolver()
         {
-            var sgraph = new GraphSerializer.SGraph() { Type = typeof( GraphTypeWithResolver ).FullName };
-            var snode = new GraphSerializer.SNode() { Type = "NonExistingType" };
-            sgraph.Nodes.Add( snode );
+            var sgraph = new SGraph() { Type = typeof( GraphTypeWithResolver ).FullName };
+            var snode = new SNode() { Type = "NonExistingType" };
+            sgraph.AddNode( snode );
 
             var str = JsonConvert.SerializeObject( sgraph );
 
@@ -290,7 +290,7 @@ namespace CrazyPanda.UnityCore.NodeEditor.Tests
             public InputPort<string> In { get; }
             public OutputPort<string> Out { get; }
 
-            protected override PropertyBlock CreatePropertyBlock( NodeModel node )
+            protected override PropertyBlock CreatePropertyBlock( INode node )
             {
                 return new Properties();
             }

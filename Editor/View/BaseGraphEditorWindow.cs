@@ -13,7 +13,7 @@ namespace CrazyPanda.UnityCore.NodeEditor
         [ SerializeField ]
         private string _serializedGraph = string.Empty;
         
-        private GraphModel _graph;
+        private SGraph _graph;
         private BaseGraphEditorView _graphEditorView;
 
         /// <summary>
@@ -55,7 +55,7 @@ namespace CrazyPanda.UnityCore.NodeEditor
         public void LoadGraph( string graphAssetGuid )
         {
             _graphAssetGuid = graphAssetGuid;
-            _graph = GraphSerializer.DeserializeFromGuid( _graphAssetGuid );
+            _graph = GraphSerializer.DeserializeSGraphFromGuid( _graphAssetGuid );
             _graphEditorView.Graph = _graph;
 
             SetWindowTitle();
@@ -110,7 +110,7 @@ namespace CrazyPanda.UnityCore.NodeEditor
         
         private void LoadSerializedGraph()
         {
-            _graph = GraphSerializer.Deserialize( _serializedGraph );
+            _graph = GraphSerializer.DeserializeSGraph( _serializedGraph );
            _graphEditorView.Graph = _graph;
            _serializedGraph = string.Empty;
 
