@@ -69,6 +69,11 @@ namespace CrazyPanda.UnityCore.NodeEditor
         public PortCapacity Capacity { get; }
 
         /// <summary>
+        /// Determines whether a connection is required at the port 
+        /// </summary>
+        public bool Optional { get; }
+
+        /// <summary>
         /// Owning node
         /// </summary>
         public NodeModel Node
@@ -93,7 +98,7 @@ namespace CrazyPanda.UnityCore.NodeEditor
         /// <param name="capacity">Capacity of a port</param>
         /// <exception cref="ArgumentNullException">When <paramref name="id"/> is null</exception>
         /// <exception cref="ArgumentNullException">When <paramref name="type"/> is null</exception>
-        public PortModel( string id, Type type, PortDirection direction, PortCapacity capacity = PortCapacity.NotSet )
+        public PortModel( string id, Type type, PortDirection direction, PortCapacity capacity = PortCapacity.NotSet, bool optional = false )
         {
             if( capacity == PortCapacity.NotSet )
             {
@@ -105,6 +110,7 @@ namespace CrazyPanda.UnityCore.NodeEditor
             Type = type ?? throw new ArgumentNullException( nameof( type ) );
             Direction = direction;
             Capacity = capacity;
+            Optional = optional;
         }
 
         /// <summary>

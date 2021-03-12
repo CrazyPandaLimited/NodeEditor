@@ -181,7 +181,7 @@ namespace CrazyPanda.UnityCore.NodeEditor
                     var inputConnections = connectedNode.InputConnections();
 
                     // check if all input ports are connected and all input connections are fulfilled
-                    if( connectedNode.InputPorts().All( p => p.Connections.Count > 0 ) &&
+                    if( connectedNode.InputPorts().All( p => p.Connections.Count > 0 || p.Optional ) &&
                         inputConnections.All( c => fulfilledConnections.Contains( c ) ) )
                     {
                         nodesToCheck.Enqueue( connectedNode );
