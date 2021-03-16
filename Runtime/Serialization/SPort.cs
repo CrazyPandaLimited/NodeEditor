@@ -8,16 +8,18 @@ namespace CrazyPanda.UnityCore.NodeEditor
 {
     public sealed class SPort : IPort
     {
-        public string Id { get; set; }
-
         public PortDirection Direction;
-
-        public PortCapacity Capacity { get; set; }
 
         public string NodeId;
 
+        public bool Optional;
+        
         public Type Type { get; set; }
 
+        public PortCapacity Capacity { get; set; }
+
+        public string Id { get; set; }
+        
         public List< SConnection > Connections { get; } = new List< SConnection >();
 
         IEnumerable< IConnection > IPort.Connections => this.Connections;
@@ -30,7 +32,8 @@ namespace CrazyPanda.UnityCore.NodeEditor
                 Direction = port.Direction,
                 Capacity = port.Capacity,
                 Type = port.Type,
-                NodeId = port?.Node?.Id ?? string.Empty
+                NodeId = port?.Node?.Id ?? string.Empty,
+                Optional = port.Optional
             };
         }
     }

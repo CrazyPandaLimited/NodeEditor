@@ -121,16 +121,16 @@ namespace CrazyPanda.UnityCore.NodeEditor
         /// <param name="direction">Direction of port</param>
         /// <param name="capacity">Capacity of a port</param>
         /// <exception cref="ArgumentNullException">When <paramref name="id"/> is null</exception>
-        public static PortModel Create<T>( string id, PortDirection direction, PortCapacity capacity = PortCapacity.NotSet )
+        public static PortModel Create<T>( string id, PortDirection direction, PortCapacity capacity = PortCapacity.NotSet, bool optional = false  )
         {
-            return new PortModel( id, typeof( T ), direction, capacity );
+            return new PortModel( id, typeof( T ), direction, capacity, optional );
         }
 
         public override string ToString() => $"Port: {Id} ({Type.Name})";
         
         public static implicit operator PortModel( SPort port )
         {
-            return new PortModel( port.Id, port.Type, port.Direction, port.Capacity );
+            return new PortModel( port.Id, port.Type, port.Direction, port.Capacity, port.Optional );
         }
     }
 }

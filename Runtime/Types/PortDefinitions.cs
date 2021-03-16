@@ -25,6 +25,8 @@ namespace CrazyPanda.UnityCore.NodeEditor
         /// </summary>
         public string Id;
 
+        public bool Optional;
+
         /// <summary>
         /// Returns actual <see cref="PortModel"/> produced by this definition
         /// </summary>
@@ -68,6 +70,8 @@ namespace CrazyPanda.UnityCore.NodeEditor
         /// Port Id. You should not modify it
         /// </summary>
         public string Id;
+
+        public bool Optional;
 
         /// <summary>
         /// Returns actual <see cref="PortModel"/> produced by this definition
@@ -113,6 +117,8 @@ namespace CrazyPanda.UnityCore.NodeEditor
         /// </summary>
         public string Id;
 
+        public bool Optional;
+
         /// <summary>
         /// Returns actual <see cref="PortModel"/> produced by this definition
         /// </summary>
@@ -146,6 +152,8 @@ namespace CrazyPanda.UnityCore.NodeEditor
         /// Port Id. You should not modify it
         /// </summary>
         public string Id;
+
+        public bool Optional;
 
         /// <summary>
         /// Returns actual <see cref="PortModel"/> produced by this definition
