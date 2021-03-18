@@ -89,6 +89,8 @@ namespace CrazyPanda.UnityCore.NodeEditor
             }
 
             var list = fieldValue as IList;
+            var listIsArray = list is Array;
+            
             var itemType = GetEnumerableType( _field.FieldType );
 
             for( int i = 0; i < list.Count; i++ )
@@ -111,30 +113,43 @@ namespace CrazyPanda.UnityCore.NodeEditor
 
                         horzBox.Add( editor );
 
-                        var removeButton = new Button( () => RemoveItem( idx ) ) { text = "X" };
+                        if( !listIsArray )
                         {
-                            removeButton.style.width = 20;
-                            removeButton.style.maxHeight = 22;
-                            removeButton.style.marginBottom = 0;
+                            var removeButton = new Button( () => RemoveItem( idx ) ) { text = "X" };
+                            {
+                                removeButton.style.width = 20;
+                                removeButton.style.maxHeight = 22;
+                                removeButton.style.marginBottom = 0;
+                            }
+                            horzBox.Add( removeButton );
                         }
-                        horzBox.Add( removeButton );
                     }
                     _foldout.Add( horzBox );
                 }
             }
 
-            var addButton = new Button( AddItem ) { text = "Add item" };
-            _foldout.Add( addButton );
+            if( !listIsArray )
+            {
+                var addButton = new Button( AddItem ) { text = "Add item" };
+                _foldout.Add( addButton );
+            }
         }
 
         private void AddItem()
         {
+            var list = List;
+
+            if( list is Array )
+            {
+                return;
+            }
+            
             var itemType = GetEnumerableType( _field.FieldType );
 
             if( itemType == typeof( string ) )
-                List.Add( "" );
+                list.Add( "" );
             else
-                List.Add( Activator.CreateInstance( itemType ) );
+                list.Add( Activator.CreateInstance( itemType ) );
 
             Changed?.Invoke( this );
             Rebuild();
