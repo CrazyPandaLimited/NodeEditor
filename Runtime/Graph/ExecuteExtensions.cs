@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Runtime.CompilerServices;
 using System.Threading.Tasks;
+using UnityEngine;
 
 namespace CrazyPanda.UnityCore.NodeEditor
 {
@@ -210,8 +211,11 @@ namespace CrazyPanda.UnityCore.NodeEditor
                         addedConnections?.FirstOrDefault()?.From?.Node?.Graph ??
                         removedConnections?.FirstOrDefault()?.From?.Node?.Graph;
 
-            _executionLists.Remove( graph );
-            graph.GraphChanged -= OnGraphModelChanged;
+            if( graph != null )
+            {
+                _executionLists.Remove( graph );
+                graph.GraphChanged -= OnGraphModelChanged;
+            }
         }
     }
 }
