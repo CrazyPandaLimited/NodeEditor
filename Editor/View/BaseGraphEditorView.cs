@@ -15,7 +15,11 @@ namespace CrazyPanda.UnityCore.NodeEditor
     public class BaseGraphEditorView : VisualElement, IGraphEditorViewFactory
     {
         private BaseGraphView _graphView;
+        protected GraphSettingsView _graphSettingsView;
+
         private readonly SGraphToGraphContentConverter _sGraphToGraphContentConverter = new SGraphToGraphContentConverter();
+        protected VisualElement _overlayRoot;
+
 
         private SGraph _graph;
 
@@ -75,6 +79,7 @@ namespace CrazyPanda.UnityCore.NodeEditor
                 Toolbar.Add( new ToolbarButton( () => SaveRequested?.Invoke() ) { text = "Save Asset" } );
                 Toolbar.Add( new ToolbarSpacer() );
                 Toolbar.Add( new ToolbarButton( () => ShowInProjectRequested?.Invoke() ) { text = "Show In Project" } );
+                Toolbar.Add( new ToolbarButton( OnToolbarSettingsButtonClick ) { text = "Graph Settings" } );
             }
             Add( Toolbar );
 
@@ -95,9 +100,27 @@ namespace CrazyPanda.UnityCore.NodeEditor
                 
                 content.Add( _graphView );
             }
+
+            _overlayRoot = new VisualElement();
+            {
+                _overlayRoot.name = "overlay-root";
+                _overlayRoot.style.position = Position.Absolute;
+                _overlayRoot.style.left = 0;
+                _overlayRoot.style.right = 0;
+                _overlayRoot.style.top = 0;
+                _overlayRoot.style.bottom = 0;
+                _overlayRoot.pickingMode = PickingMode.Ignore;
+            }
+            content.Add( _overlayRoot );
+
             Add( content );
 
             _graphView.MarkDirtyRepaint();
+        }
+
+        protected virtual void OnToolbarSettingsButtonClick()
+        {
+            Debug.Log( "OnToolbarSettingsButtonClick" );
         }
 
         /// <summary>

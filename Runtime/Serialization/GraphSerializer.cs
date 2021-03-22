@@ -28,6 +28,8 @@ namespace CrazyPanda.UnityCore.NodeEditor
                 sgraph.AddConnection( connectionModel );
             }
 
+            sgraph.SetSettings( graph.GraphSettings );
+
             return Serialize( sgraph );
         }
         

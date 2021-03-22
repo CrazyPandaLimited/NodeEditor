@@ -1,11 +1,11 @@
-using System;
+﻿using System;
 using System.Collections.Generic;
 using System.Linq;
 using Newtonsoft.Json;
 
 namespace CrazyPanda.UnityCore.NodeEditor
 {
-    public abstract class BaseGraph< TNode, TConnection, TPort > : IGraph where TNode : INode where TPort : IPort where TConnection : IConnection
+    public abstract class BaseGraph< TNode, TConnection, TPort, TGraphSettings > : IGraph where TNode : INode where TPort : IPort where TConnection : IConnection where TGraphSettings: IGraphSettings, new()
     {
         /// <summary>
         /// Calback that is fired when changes happen in a graph
@@ -26,7 +26,11 @@ namespace CrazyPanda.UnityCore.NodeEditor
         protected List< TNode > _nodes = new List< TNode >();
         [ JsonProperty( nameof(Connections) ) ]
         protected List< TConnection > _connections = new List< TConnection >();
+
+        [JsonProperty( nameof( GraphSettings ) )]
+        protected IGraphSettings _graphSettings = new TGraphSettings();
         
+
         /// <summary>
         /// Collection of nodes
         /// </summary>
@@ -37,6 +41,9 @@ namespace CrazyPanda.UnityCore.NodeEditor
         /// </summary>
         [ JsonIgnore ]
         public IReadOnlyList< TConnection > Connections => _connections;
+
+        [JsonIgnore]
+        public IGraphSettings GraphSettings => _graphSettings;
 
         /// <summary>
         /// Event that is fired when changes happen in a graph
@@ -265,9 +272,14 @@ namespace CrazyPanda.UnityCore.NodeEditor
             return ret;
         }
 
+        public void SetSettings( IGraphSettings graphSettings )
+        {
+            _graphSettings = graphSettings;
+        }
+
         protected class ChangeSet : IDisposable
         {
-            private BaseGraph< TNode, TConnection, TPort > _graph;
+            private BaseGraph< TNode, TConnection, TPort, TGraphSettings > _graph;
 
             // DO NOT modify these lists directly. Use Add and Remove methods
             public List< TNode > AddedNodes;
@@ -275,7 +287,7 @@ namespace CrazyPanda.UnityCore.NodeEditor
             public List< TConnection > AddedConnections;
             public List< TConnection > RemovedConnections;
 
-            public ChangeSet( BaseGraph< TNode, TConnection, TPort > graph )
+            public ChangeSet( BaseGraph< TNode, TConnection, TPort, TGraphSettings> graph )
             {
                 _graph = graph;
             }

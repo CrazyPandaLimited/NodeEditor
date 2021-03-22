@@ -6,7 +6,7 @@ namespace CrazyPanda.UnityCore.NodeEditor
     /// <summary>
     /// Model of a graph. Contains nodes and connections between them
     /// </summary>
-    public sealed class GraphModel : BaseGraph< NodeModel, ConnectionModel, PortModel >
+    public sealed class GraphModel : BaseGraph< NodeModel, ConnectionModel, PortModel, GraphSettingsModel>
     {
         /// <summary>
         /// Type of graph
@@ -112,14 +112,14 @@ namespace CrazyPanda.UnityCore.NodeEditor
             node.Graph = null;
         }
 
-        protected override BaseGraph< NodeModel, ConnectionModel, PortModel >.ChangeSet CreateChangeSet()
+        protected override BaseGraph< NodeModel, ConnectionModel, PortModel, GraphSettingsModel>.ChangeSet CreateChangeSet()
         {
             return new ChangeSet( this );
         }
 
-        private new sealed class ChangeSet : BaseGraph< NodeModel, ConnectionModel, PortModel >.ChangeSet
+        private new sealed class ChangeSet : BaseGraph< NodeModel, ConnectionModel, PortModel, GraphSettingsModel>.ChangeSet
         {
-            public ChangeSet( BaseGraph< NodeModel, ConnectionModel, PortModel > graph ) : base( graph )
+            public ChangeSet( BaseGraph< NodeModel, ConnectionModel, PortModel, GraphSettingsModel> graph ) : base( graph )
             {
             }
 

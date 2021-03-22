@@ -1,4 +1,4 @@
-using System.Collections.Generic;
+﻿using System.Collections.Generic;
 using System.Linq;
 
 namespace CrazyPanda.UnityCore.NodeEditor
@@ -21,6 +21,7 @@ namespace CrazyPanda.UnityCore.NodeEditor
             GraphModel = new GraphModel( sGraph.GraphType );
             sGraph.AddContentsToGraph( GraphModel );
             sGraph.GraphChanged += OnGraphChanged;
+            GraphModel.SetSettings( _sGraph.GraphSettings );
         }
         
         private void OnGraphChanged( IReadOnlyList< SNode > addednodes, IReadOnlyList< SNode > removednodes, IReadOnlyList< SConnection > addedconnections, IReadOnlyList< SConnection > removedconnections )

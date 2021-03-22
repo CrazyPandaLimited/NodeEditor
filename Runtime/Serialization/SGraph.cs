@@ -1,4 +1,4 @@
-using System;
+﻿using System;
 using System.Linq;
 using Newtonsoft.Json;
 using UnityEngine;
@@ -6,7 +6,7 @@ using UnityEngine;
 namespace CrazyPanda.UnityCore.NodeEditor
 {
     [ Serializable ]
-    public class SGraph : BaseGraph< SNode, SConnection, SPort >
+    public class SGraph : BaseGraph< SNode, SConnection, SPort, SGraphSettings >
     {
         public string Type;
 
@@ -50,7 +50,7 @@ namespace CrazyPanda.UnityCore.NodeEditor
                 return false;
 
             return true;
-        }
+        }        
 
         public void AddConnection( SConnection connection )
         {
