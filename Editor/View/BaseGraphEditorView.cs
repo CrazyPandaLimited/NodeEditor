@@ -12,10 +12,10 @@ namespace CrazyPanda.UnityCore.NodeEditor
     /// <summary>
     /// Base class for GraphEditor view
     /// </summary>
-    public class BaseGraphEditorView : VisualElement, IGraphEditorViewFactory
+    public class BaseGraphEditorView<TGraphSettingsView, TGraphSettingsViewModel> : VisualElement, IGraphEditorViewFactory where TGraphSettingsView: BaseGraphSettingsView<TGraphSettingsViewModel>, new() where TGraphSettingsViewModel : BaseGraphSettingsViewModel, new()
     {
         private BaseGraphView _graphView;
-        protected GraphSettingsView _graphSettingsView;
+        protected TGraphSettingsView _graphSettingsView;
 
         private readonly SGraphToGraphContentConverter _sGraphToGraphContentConverter = new SGraphToGraphContentConverter();
         protected VisualElement _overlayRoot;
@@ -75,13 +75,13 @@ namespace CrazyPanda.UnityCore.NodeEditor
             styleSheets.Add( Resources.Load<StyleSheet>( $"Styles/BaseGraphEditorView" ) );
 
             Toolbar = new Toolbar() { name = "main-toolbar" };
-            {
-                Toolbar.Add( new ToolbarButton( () => SaveRequested?.Invoke() ) { text = "Save Asset" } );
-                Toolbar.Add( new ToolbarSpacer() );
-                Toolbar.Add( new ToolbarButton( () => ShowInProjectRequested?.Invoke() ) { text = "Show In Project" } );
-                Toolbar.Add( new ToolbarButton( OnToolbarSettingsButtonClick ) { text = "Graph Settings" } );
-            }
             Add( Toolbar );
+
+            CreateToolbarButton( "Save Asset", () => SaveRequested?.Invoke() );
+            Toolbar.Add( new ToolbarSpacer() );
+            CreateToolbarButton( "Show In Project", () => ShowInProjectRequested?.Invoke() );
+            CreateToolbarButton( "Graph Settings", OnToolbarSettingsButtonClick );
+            
 
             var content = new VisualElement { name = "content" };
             {
@@ -118,9 +118,30 @@ namespace CrazyPanda.UnityCore.NodeEditor
             _graphView.MarkDirtyRepaint();
         }
 
+        protected void CreateToolbarButton( string name, Action clickEvent )
+        {
+            Toolbar.Add( new ToolbarButton( clickEvent )
+            {
+                text = name
+            } );
+        }
+
         protected virtual void OnToolbarSettingsButtonClick()
         {
-            Debug.Log( "OnToolbarSettingsButtonClick" );
+            if( _graphSettingsView == null )
+            {
+                _graphSettingsView = new TGraphSettingsView();
+                TGraphSettingsViewModel gsm = new TGraphSettingsViewModel();
+                gsm.SetGraphSettings( GraphModel.GraphSettings );
+
+                _graphSettingsView.SetupModel( gsm );
+                _overlayRoot.Add( _graphSettingsView );
+            }
+            else
+            {
+                _overlayRoot.Remove( _graphSettingsView );
+                _graphSettingsView = null;
+            }
         }
 
         /// <summary>

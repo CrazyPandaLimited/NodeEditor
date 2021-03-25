@@ -6,6 +6,8 @@ namespace CrazyPanda.UnityCore.NodeEditor
 {
     public interface IGraphSettings
     {
+        object CustomSettingsHolder { get; set; }
+
         string TestSettings { get; set; }
     }
 }

@@ -27,7 +27,7 @@ namespace CrazyPanda.UnityCore.NodeEditor
 
         public void OnDropOutsidePort( Edge edge, Vector2 position )
         {
-            var w = _graphView.GetFirstAncestorOfType<BaseGraphEditorView>().Window;
+            var w = _graphView.GetFirstAncestorOfType<BaseGraphEditorView<BaseGraphSettingsView<BaseGraphSettingsViewModel>, BaseGraphSettingsViewModel>>().Window;
             var pos = w.position.position + position;
 
             _graphView.nodeCreationRequest?.Invoke( new NodeCreationContext() { screenMousePosition = pos, target = edge } );

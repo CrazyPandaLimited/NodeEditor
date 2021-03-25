@@ -5,7 +5,7 @@ using System.Threading.Tasks;
 
 namespace CrazyPanda.UnityCore.NodeEditor
 {
-    public class GraphSettingsViewModel
+    public class BaseGraphSettingsViewModel
     {
         public IGraphSettings GraphSettings { get; private set; }
 

@@ -45,19 +45,19 @@ namespace CrazyPanda.UnityCore.NodeEditor
             var guid = AssetDatabase.AssetPathToGUID( path );
 
             var foundWindow = false;
-            foreach( BaseGraphEditorWindow w in Resources.FindObjectsOfTypeAll( graphImporter.EditorWindowType ) )
+            foreach( var w in Resources.FindObjectsOfTypeAll( graphImporter.EditorWindowType ) )
             {
-                if( w.GraphAssetGuid == guid )
+                if (w is IGraphEditorWindow graphWindow)
                 {
                     foundWindow = true;
-                    w.Show();
-                    w.Focus();
+                    graphWindow.Focus();
+                    graphWindow.Show();
                 }
-            }
-
+            }            
             if( !foundWindow )
             {
-                var window = CreateInstance( graphImporter.EditorWindowType ) as BaseGraphEditorWindow;
+                //Debug.Log( $"graphImporter.EditorWindowType={graphImporter.EditorWindowType}" );
+                var window = CreateInstance( graphImporter.EditorWindowType ) as IGraphEditorWindow;
                 window.Show();
                 window.LoadGraph( guid );
             }

@@ -1,7 +1,0 @@
-﻿<ui:UXML xmlns:ui="UnityEngine.UIElements" xmlns:uie="UnityEditor.UIElements" xmlns:l="CrazyPanda.UnityCore.AssetsSystem">    
-    <ui:Label text="Graph settings:" />
-    <ui:VisualElement class="flex-column flex-grow">
-        <ui:Label name="test-settings-name" text="test-settings-name" />
-        <ui:TextField name="test-settings-field" text="test-settings-field" />
-    </ui:VisualElement>
-</ui:UXML>

@@ -7,14 +7,20 @@ namespace CrazyPanda.UnityCore.NodeEditor
     /// <summary>
     /// Base class for GraphEditor window
     /// </summary>
-    public class BaseGraphEditorWindow : EditorWindow, ISerializationCallbackReceiver
+    public class BaseGraphEditorWindow<TGraphEditorView, TGraphSettingsView, TGraphSettingsViewModel> : 
+        EditorWindow, 
+        ISerializationCallbackReceiver,
+        IGraphEditorWindow
+        where TGraphEditorView : BaseGraphEditorView<TGraphSettingsView, TGraphSettingsViewModel>, new() 
+        where TGraphSettingsView:BaseGraphSettingsView<TGraphSettingsViewModel>, new() 
+        where TGraphSettingsViewModel:BaseGraphSettingsViewModel,new()
     {
         [SerializeField] private string _graphAssetGuid; // store guid, not path to prevent errors when moving assets
         [ SerializeField ]
         private string _serializedGraph = string.Empty;
         
         private SGraph _graph;
-        private BaseGraphEditorView _graphEditorView;
+        private TGraphEditorView _graphEditorView;
 
         /// <summary>
         /// Guid of opened asset
@@ -81,9 +87,9 @@ namespace CrazyPanda.UnityCore.NodeEditor
         /// Creates <see cref="BaseGraphEditorView"/> for editing <see cref="GraphAsset"/>.
         /// Override this to create custom view
         /// </summary>
-        protected virtual BaseGraphEditorView CreateEditorView()
+        protected virtual TGraphEditorView CreateEditorView()
         {
-            return new BaseGraphEditorView();
+            return new TGraphEditorView();
         }
 
         private void ShowInProject()

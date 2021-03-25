@@ -1,0 +1,40 @@
+﻿.flex-grow, .flex-grow-1 {
+    flex-grow: 1;    
+}
+
+.flex-grow-2 {
+    flex-grow: 2;
+}
+
+.flex-row {
+    flex-direction: row;
+}
+
+.flex-column {
+    flex-direction: column;
+}
+
+.flex-column-reverse {
+    flex-direction: column-reverse;
+}
+
+
+.settings-back {
+    background-color: #393939;
+    max-width: 400;
+}
+
+#property-name{
+    min-width: 150;
+    max-width: 250;
+    -unity-text-align: middle-left;
+}
+
+#property-value{
+    min-width: 250;
+    max-width: 250;
+}
+
+.header {
+    font-size: 18px;
+}

@@ -8,6 +8,7 @@ namespace CrazyPanda.UnityCore.NodeEditor
     {
 
         public string TestSettings { get; set; }
+        public object CustomSettingsHolder { get; set; }
 
         public GraphSettingsModel() 
         { 

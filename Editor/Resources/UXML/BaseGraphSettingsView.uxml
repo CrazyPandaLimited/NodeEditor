@@ -1,0 +1,7 @@
+﻿<ui:UXML xmlns:ui="UnityEngine.UIElements" xmlns:uie="UnityEditor.UIElements" xmlns:l="CrazyPanda.UnityCore.AssetsSystem">
+    <ui:VisualElement class="settings-back">
+        <ui:Label text="Graph settings:" class="header" />
+        <ui:VisualElement name="properties-holder" class="flex-column flex-grow">            
+        </ui:VisualElement>
+    </ui:VisualElement>
+</ui:UXML>
