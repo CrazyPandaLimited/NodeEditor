@@ -54,7 +54,7 @@ namespace CrazyPanda.UnityCore.NodeEditor
             //BindProperty("Test value:", ()=> Model.GraphSettings.TestSettings, (newVal)=> { Model.GraphSettings.TestSettings = newVal; } );
         }
 
-        protected void BindProperty(string propertyName, Func<string> propertyGetter, Action<string> propertySetter)
+        protected VisualElement BindProperty(string propertyName, Func<string> propertyGetter, Action<string> propertySetter)
         {
             if( string.IsNullOrEmpty( propertyName ) ) throw new ArgumentNullException( nameof( propertyName ) );
             if( propertyGetter == null ) throw new ArgumentNullException(nameof( propertyGetter ) );
@@ -71,7 +71,11 @@ namespace CrazyPanda.UnityCore.NodeEditor
                 textField.RegisterCallback<ChangeEvent<string>>((arg)=> { propertySetter(arg.newValue); } );
 
                 GetPropertiesHolder().Add( propBlock );
-            }                      
+
+                return propBlock;
+            }
+
+            return default;
         }
 
         protected VisualElement GetPropertiesHolder()
