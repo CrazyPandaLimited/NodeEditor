@@ -4,13 +4,23 @@ using UnityEngine.UIElements;
 
 namespace CrazyPanda.UnityCore.NodeEditor
 {
-    public class BaseGraphSettingsView<TSettingsViewModel> : VisualElement where TSettingsViewModel: BaseGraphSettingsViewModel, new()
+    public class BaseGraphSettingsView : VisualElement
     {
         protected const string UxmlLocationPath = "UXML/";
         protected const string StylesLocationPath = "Styles/";
         protected const string UxmlStringProperty = "SettingsStringProperty";
 
-        public TSettingsViewModel Model { get; private set; }
+        private SGraph _model;
+
+        public SGraph Model
+        {
+            get => _model;
+            set
+            {
+                _model = value;
+                UpdateControls();
+            }
+        }
 
         public BaseGraphSettingsView()
         {
@@ -42,12 +52,6 @@ namespace CrazyPanda.UnityCore.NodeEditor
             }
         }
 
-        public void SetupModel( TSettingsViewModel model )
-        {
-            Model = model;
-            UpdateControls();
-        }
-
         protected virtual void UpdateControls()
         {
             GetPropertiesHolder().Clear();
@@ -68,7 +72,7 @@ namespace CrazyPanda.UnityCore.NodeEditor
                 propBlock.Q<Label>( "property-name" ).text = propertyName;
                 var textField = propBlock.Q<TextField>( "property-value" );
                 textField.value = propertyGetter();
-                textField.RegisterCallback<ChangeEvent<string>>((arg)=> { propertySetter(arg.newValue); SaveChangesToCustomSettingsHolder(); } );
+                textField.RegisterCallback<ChangeEvent<string>>((arg)=> { propertySetter(arg.newValue); } );
 
                 GetPropertiesHolder().Add( propBlock );
 
@@ -81,11 +85,6 @@ namespace CrazyPanda.UnityCore.NodeEditor
         protected VisualElement GetPropertiesHolder()
         {
             return this.Q<VisualElement>( "properties-holder" );
-        }
-
-        protected void SaveChangesToCustomSettingsHolder()
-        {
-            Model.SaveChangesToCustomSettingsHolder();
         }
     }
 }

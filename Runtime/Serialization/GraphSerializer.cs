@@ -28,7 +28,7 @@ namespace CrazyPanda.UnityCore.NodeEditor
                 sgraph.AddConnection( connectionModel );
             }
 
-            sgraph.SetSettings( graph.GraphSettings );
+            sgraph.CustomSettings = graph.CustomSettings;
 
             return Serialize( sgraph );
         }
@@ -51,6 +51,7 @@ namespace CrazyPanda.UnityCore.NodeEditor
         public static SGraph DeserializeSGraph( string data )
         {
             var graph = JsonConvert.DeserializeObject< SGraph >( data );
+            
             var nodeResolver = graph.GraphType as IGraphTypeResolver ?? StaticResolver;
 
             foreach( var n in graph.Nodes )

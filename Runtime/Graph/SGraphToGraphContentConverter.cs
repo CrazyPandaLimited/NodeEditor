@@ -1,5 +1,6 @@
 ﻿using System.Collections.Generic;
 using System.Linq;
+using Newtonsoft.Json;
 
 namespace CrazyPanda.UnityCore.NodeEditor
 {
@@ -13,16 +14,23 @@ namespace CrazyPanda.UnityCore.NodeEditor
         {
             if( _sGraph != null )
             {
+                _sGraph.OnCustomSettingsChanged -= OnCustomSettingsChanged;
                 _sGraph.GraphChanged -= OnGraphChanged;
             }
 
             _sGraph = sGraph;
 
-            GraphModel = new GraphModel( sGraph.GraphType );
+            GraphModel = new GraphModel( sGraph.GraphType )
+            {
+                CustomSettings = _sGraph.CustomSettings
+            };
+
             sGraph.AddContentsToGraph( GraphModel );
             sGraph.GraphChanged += OnGraphChanged;
-            GraphModel.SetSettings( _sGraph.GraphSettings );
+            sGraph.OnCustomSettingsChanged += OnCustomSettingsChanged;
         }
+
+        private void OnCustomSettingsChanged( object customSettings ) => GraphModel.CustomSettings = customSettings;
         
         private void OnGraphChanged( IReadOnlyList< SNode > addednodes, IReadOnlyList< SNode > removednodes, IReadOnlyList< SConnection > addedconnections, IReadOnlyList< SConnection > removedconnections )
         {

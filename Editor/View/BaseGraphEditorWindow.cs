@@ -7,13 +7,12 @@ namespace CrazyPanda.UnityCore.NodeEditor
     /// <summary>
     /// Base class for GraphEditor window
     /// </summary>
-    public class BaseGraphEditorWindow<TGraphEditorView, TGraphSettingsView, TGraphSettingsViewModel> : 
+    public class BaseGraphEditorWindow<TGraphEditorView, TGraphSettingsView> : 
         EditorWindow, 
         ISerializationCallbackReceiver,
         IGraphEditorWindow
-        where TGraphEditorView : BaseGraphEditorView<TGraphSettingsView, TGraphSettingsViewModel>, new() 
-        where TGraphSettingsView:BaseGraphSettingsView<TGraphSettingsViewModel>, new() 
-        where TGraphSettingsViewModel:BaseGraphSettingsViewModel,new()
+        where TGraphEditorView : BaseGraphEditorView<TGraphSettingsView>, new() 
+        where TGraphSettingsView:BaseGraphSettingsView, new() 
     {
         [SerializeField] private string _graphAssetGuid; // store guid, not path to prevent errors when moving assets
         [ SerializeField ]

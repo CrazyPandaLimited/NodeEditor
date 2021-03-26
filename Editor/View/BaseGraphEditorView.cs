@@ -12,7 +12,7 @@ namespace CrazyPanda.UnityCore.NodeEditor
     /// <summary>
     /// Base class for GraphEditor view
     /// </summary>
-    public class BaseGraphEditorView<TGraphSettingsView, TGraphSettingsViewModel> : VisualElement, IGraphEditorViewFactory where TGraphSettingsView: BaseGraphSettingsView<TGraphSettingsViewModel>, new() where TGraphSettingsViewModel : BaseGraphSettingsViewModel, new()
+    public class BaseGraphEditorView< TGraphSettingsView > : VisualElement, IGraphEditorViewFactory where TGraphSettingsView : BaseGraphSettingsView, new()
     {
         private BaseGraphView _graphView;
         protected TGraphSettingsView _graphSettingsView;
@@ -39,8 +39,13 @@ namespace CrazyPanda.UnityCore.NodeEditor
                 _graph = value;
                 _graphView.LoadGraph( _graph );
 
-                _sGraphToGraphContentConverter.SetGraph( value );
+                if( _graph.CustomSettings == null )
+                {
+                    _graph.CustomSettings = CreateGraphSettings();
+                }
                 
+                _sGraphToGraphContentConverter.SetGraph( value );
+
                 OnGraphLoaded();
             }
         }
@@ -130,11 +135,7 @@ namespace CrazyPanda.UnityCore.NodeEditor
         {
             if( _graphSettingsView == null )
             {
-                _graphSettingsView = new TGraphSettingsView();
-                TGraphSettingsViewModel gsm = new TGraphSettingsViewModel();
-                gsm.SetGraphSettings( GraphModel.GraphSettings );
-
-                _graphSettingsView.SetupModel( gsm );
+                _graphSettingsView = new TGraphSettingsView { Model = Graph };
                 _overlayRoot.Add( _graphSettingsView );
             }
             else
@@ -182,6 +183,11 @@ namespace CrazyPanda.UnityCore.NodeEditor
         {
         }
 
+        protected virtual object CreateGraphSettings()
+        {
+            return null;
+        }
+        
         private void NodeSelectRequested( NodeCreationContext obj )
         {
             var port = ((obj.target as BaseConnectionView)?.output as BasePortView)?.Port;

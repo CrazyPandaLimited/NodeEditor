@@ -1,12 +1,12 @@
 ﻿using System;
 using System.Linq;
+using System.Runtime.Serialization;
 using Newtonsoft.Json;
-using UnityEngine;
 
 namespace CrazyPanda.UnityCore.NodeEditor
 {
     [ Serializable ]
-    public class SGraph : BaseGraph< SNode, SConnection, SPort, SGraphSettings >
+    public class SGraph : BaseGraph< SNode, SConnection, SPort>
     {
         public string Type;
 
@@ -15,6 +15,31 @@ namespace CrazyPanda.UnityCore.NodeEditor
 
         [ JsonIgnore ]
         public IGraphType GraphType => _graphType.Value;
+
+        [ JsonProperty ] 
+        private string _customSettingsFullTypeName = string.Empty;
+
+        [ JsonProperty ] 
+        private string _customSettingsSerializedValue = string.Empty;
+
+        [ JsonIgnore ] 
+        private object _customSettings;
+        
+        [ JsonIgnore ]
+        public override object CustomSettings
+        {
+            get => _customSettings;
+            set
+            {
+                _customSettings = value;
+                _customSettingsFullTypeName = value?.GetType()?.FullName ?? string.Empty;
+
+                OnCustomSettingsChanged?.Invoke( _customSettings );
+            }
+        }
+
+
+        public event Action< object > OnCustomSettingsChanged;
         
         public SGraph()
         {
@@ -52,6 +77,19 @@ namespace CrazyPanda.UnityCore.NodeEditor
             return true;
         }        
 
+        public override void Disconnect( SConnection connection )
+        {
+            RemovePort( connection.FromNodeId, connection.FromPortId );
+            RemovePort( connection.ToNodeId, connection.ToPortId );
+            
+            base.Disconnect( connection );
+
+            void RemovePort( string nodeId, string portId )
+            {
+                _nodes.FirstOrDefault( node => node.Id == nodeId )?.Ports?.FirstOrDefault( port => port.Id == portId )?.Connections?.Remove( connection );
+            }
+        }
+        
         public void AddConnection( SConnection connection )
         {
             if( connection == null )
@@ -84,17 +122,23 @@ namespace CrazyPanda.UnityCore.NodeEditor
             return ret;
         }
 
-        public override void Disconnect( SConnection connection )
+        [ OnSerializing ]
+        private void OnSerializing( StreamingContext context )
         {
-            RemovePort( connection.FromNodeId, connection.FromPortId );
-            RemovePort( connection.ToNodeId, connection.ToPortId );
-            
-            base.Disconnect( connection );
+            if( _customSettings == null ) return;
 
-            void RemovePort( string nodeId, string portId )
+            _customSettingsSerializedValue = JsonConvert.SerializeObject( CustomSettings );
+        }
+
+        [ OnDeserialized ]
+        private void OnDeserialized( StreamingContext context )
+        {
+            if( string.IsNullOrEmpty( _customSettingsSerializedValue ) || string.IsNullOrEmpty( _customSettingsFullTypeName ) )
             {
-                _nodes.FirstOrDefault( node => node.Id == nodeId )?.Ports?.FirstOrDefault( port => port.Id == portId )?.Connections?.Remove( connection );
+                return;
             }
+
+            _customSettings = JsonConvert.DeserializeObject( _customSettingsSerializedValue, GraphSerializer.StaticResolver.FindType( _customSettingsFullTypeName ) );
         }
     }
 }
