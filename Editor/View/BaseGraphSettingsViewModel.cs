@@ -13,5 +13,9 @@ namespace CrazyPanda.UnityCore.NodeEditor
         {
             this.GraphSettings = graphSettings;
         }
+
+        public virtual void SaveChangesToCustomSettingsHolder()
+        {            
+        }
     }
 }

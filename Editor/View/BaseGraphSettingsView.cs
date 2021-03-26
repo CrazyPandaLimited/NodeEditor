@@ -68,7 +68,7 @@ namespace CrazyPanda.UnityCore.NodeEditor
                 propBlock.Q<Label>( "property-name" ).text = propertyName;
                 var textField = propBlock.Q<TextField>( "property-value" );
                 textField.value = propertyGetter();
-                textField.RegisterCallback<ChangeEvent<string>>((arg)=> { propertySetter(arg.newValue); } );
+                textField.RegisterCallback<ChangeEvent<string>>((arg)=> { propertySetter(arg.newValue); SaveChangesToCustomSettingsHolder(); } );
 
                 GetPropertiesHolder().Add( propBlock );
 
@@ -81,6 +81,11 @@ namespace CrazyPanda.UnityCore.NodeEditor
         protected VisualElement GetPropertiesHolder()
         {
             return this.Q<VisualElement>( "properties-holder" );
+        }
+
+        protected void SaveChangesToCustomSettingsHolder()
+        {
+            Model.SaveChangesToCustomSettingsHolder();
         }
     }
 }

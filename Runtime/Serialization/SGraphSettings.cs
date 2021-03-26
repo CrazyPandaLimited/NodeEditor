@@ -8,13 +8,22 @@ namespace CrazyPanda.UnityCore.NodeEditor
 {
     [Serializable]
     public class SGraphSettings : IGraphSettings
-    {
-        public object CustomSettingsHolder { get; set; }
-
+    {        
         public string TestSettings { get; set; }
+        public string CustomSettingsHolder { get ; set; }
 
         public SGraphSettings()
         {
+        }
+
+        public void OnBeforeSerialization()
+        {
+            throw new NotImplementedException();
+        }
+
+        public void OnAfterDeserialization()
+        {
+            throw new NotImplementedException();
         }
     }
 }
