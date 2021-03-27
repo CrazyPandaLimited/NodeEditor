@@ -1,5 +1,4 @@
 ﻿using System;
-using System.Collections.Generic;
 using System.Linq;
 using UnityEditor;
 using UnityEditor.Experimental.GraphView;
@@ -9,19 +8,72 @@ using UnityEngine.UIElements;
 
 namespace CrazyPanda.UnityCore.NodeEditor
 {
+    public class BaseGraphEditorView < TGraphSettingsView > : BaseGraphEditorView where TGraphSettingsView : BaseGraphSettingsView, new()
+    {
+        protected TGraphSettingsView _graphSettingsView;
+
+        public override SGraph Graph
+        {
+            get => base.Graph;
+            set
+            {
+                if( _graph != null )
+                {
+                    _graph.OnCustomSettingsChanged -= OnGraphSettingsChanged;
+                }
+
+                if( value.CustomSettings == null )
+                {
+                    value.CustomSettings = CreateGraphSettings();
+                }
+                
+                OnGraphSettingsChanged( value.CustomSettings );
+                
+                value.OnCustomSettingsChanged += OnGraphSettingsChanged;
+
+                base.Graph = value;
+            }
+        }
+
+        public BaseGraphEditorView() => CreateToolbarButton( "Graph Settings", OnToolbarSettingsButtonClick );
+        
+        protected virtual void OnToolbarSettingsButtonClick()
+        {
+            if( _graphSettingsView == null )
+            {
+                _graphSettingsView = new TGraphSettingsView { Model = Graph.CustomSettings };
+                _overlayRoot.Add( _graphSettingsView );
+            }
+            else
+            {
+                _overlayRoot.Remove( _graphSettingsView );
+                _graphSettingsView = null;
+            }
+        }
+        
+        private void OnGraphSettingsChanged( IGraphSettings graphSettings )
+        {
+            if( _graphSettingsView == null )
+            {
+                return;
+            }
+                    
+            _graphSettingsView.Model = graphSettings;
+        }
+    }
+    
     /// <summary>
     /// Base class for GraphEditor view
     /// </summary>
-    public class BaseGraphEditorView< TGraphSettingsView > : VisualElement, IGraphEditorViewFactory where TGraphSettingsView : BaseGraphSettingsView, new()
+    public class BaseGraphEditorView : VisualElement, IGraphEditorViewFactory
     {
         private BaseGraphView _graphView;
-        protected TGraphSettingsView _graphSettingsView;
 
         private readonly SGraphToGraphContentConverter _sGraphToGraphContentConverter = new SGraphToGraphContentConverter();
         protected VisualElement _overlayRoot;
 
 
-        private SGraph _graph;
+        protected SGraph _graph { get; private set; }
 
         /// <summary>
         /// <see cref="GraphModel"/> that is displayed by this view
@@ -31,16 +83,11 @@ namespace CrazyPanda.UnityCore.NodeEditor
         /// <summary>
         /// <see cref="SGraph"/> that is displayed by this view
         /// </summary>
-        public SGraph Graph
+        public virtual SGraph Graph
         {
             get { return _graph; }
             set
             {
-                if( _graph != null )
-                {
-                    _graph.OnCustomSettingsChanged -= OnGraphSettingsChanged;
-                }
-                
                 _graph = value;
                 _graphView.LoadGraph( _graph );
 
@@ -49,10 +96,7 @@ namespace CrazyPanda.UnityCore.NodeEditor
                     _graph.CustomSettings = CreateGraphSettings();
                 }
 
-                OnGraphSettingsChanged( _graph.CustomSettings );
-                
                 _sGraphToGraphContentConverter.SetGraph( value );
-                _graph.OnCustomSettingsChanged += OnGraphSettingsChanged;
 
                 OnGraphLoaded();
             }
@@ -93,9 +137,7 @@ namespace CrazyPanda.UnityCore.NodeEditor
             CreateToolbarButton( "Save Asset", () => SaveRequested?.Invoke() );
             Toolbar.Add( new ToolbarSpacer() );
             CreateToolbarButton( "Show In Project", () => ShowInProjectRequested?.Invoke() );
-            CreateToolbarButton( "Graph Settings", OnToolbarSettingsButtonClick );
             
-
             var content = new VisualElement { name = "content" };
             {
                 _graphView = CreateGraphView();
@@ -137,20 +179,6 @@ namespace CrazyPanda.UnityCore.NodeEditor
             {
                 text = name
             } );
-        }
-
-        protected virtual void OnToolbarSettingsButtonClick()
-        {
-            if( _graphSettingsView == null )
-            {
-                _graphSettingsView = new TGraphSettingsView { Model = Graph.CustomSettings };
-                _overlayRoot.Add( _graphSettingsView );
-            }
-            else
-            {
-                _overlayRoot.Remove( _graphSettingsView );
-                _graphSettingsView = null;
-            }
         }
 
         /// <summary>
@@ -232,16 +260,6 @@ namespace CrazyPanda.UnityCore.NodeEditor
             }
 
             return true;
-        }
-        
-        private void OnGraphSettingsChanged( IGraphSettings graphSettings )
-        {
-            if( _graphSettingsView == null )
-            {
-                return;
-            }
-                    
-            _graphSettingsView.Model = graphSettings;
         }
     }
 }
