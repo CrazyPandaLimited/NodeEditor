@@ -149,7 +149,7 @@ namespace CrazyPanda.UnityCore.NodeEditor
             if( nodes.Count == 0 )
                 return Array.Empty< object >();
 
-            var nodesToCheck = new Queue< NodeModel >( nodes.Where( n => !n.InputPorts().Any() || n.InputPorts().All( port => port.Optional ) ) );
+            var nodesToCheck = new Queue< NodeModel >( nodes.Where( n => !n.InputPorts().Any() ) );
             if( nodesToCheck.Count == 0 )
             {
                 throw new InvalidOperationException( "Cannot walk graph! All of its nodes have inputs" );
