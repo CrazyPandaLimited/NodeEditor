@@ -30,7 +30,7 @@ namespace CrazyPanda.UnityCore.NodeEditor
             sGraph.OnCustomSettingsChanged += OnCustomSettingsChanged;
         }
 
-        private void OnCustomSettingsChanged( object customSettings ) => GraphModel.CustomSettings = customSettings;
+        private void OnCustomSettingsChanged( IGraphSettings customSettings ) => GraphModel.CustomSettings = customSettings;
         
         private void OnGraphChanged( IReadOnlyList< SNode > addednodes, IReadOnlyList< SNode > removednodes, IReadOnlyList< SConnection > addedconnections, IReadOnlyList< SConnection > removedconnections )
         {

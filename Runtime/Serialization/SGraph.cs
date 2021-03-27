@@ -23,10 +23,10 @@ namespace CrazyPanda.UnityCore.NodeEditor
         private string _customSettingsSerializedValue = string.Empty;
 
         [ JsonIgnore ] 
-        private object _customSettings;
+        private IGraphSettings _customSettings;
         
         [ JsonIgnore ]
-        public override object CustomSettings
+        public override IGraphSettings CustomSettings
         {
             get => _customSettings;
             set
@@ -39,7 +39,7 @@ namespace CrazyPanda.UnityCore.NodeEditor
         }
 
 
-        public event Action< object > OnCustomSettingsChanged;
+        public event Action< IGraphSettings > OnCustomSettingsChanged;
         
         public SGraph()
         {
@@ -138,7 +138,7 @@ namespace CrazyPanda.UnityCore.NodeEditor
                 return;
             }
 
-            _customSettings = JsonConvert.DeserializeObject( _customSettingsSerializedValue, GraphSerializer.StaticResolver.FindType( _customSettingsFullTypeName ) );
+            _customSettings = ( IGraphSettings ) JsonConvert.DeserializeObject( _customSettingsSerializedValue, GraphSerializer.StaticResolver.FindType( _customSettingsFullTypeName ) );
         }
     }
 }

@@ -28,7 +28,7 @@ namespace CrazyPanda.UnityCore.NodeEditor
         protected List< TConnection > _connections = new List< TConnection >();
 
         [ JsonIgnore ]
-        public virtual object CustomSettings { get; set; }
+        public virtual IGraphSettings CustomSettings { get; set; }
         
         /// <summary>
         /// Collection of nodes

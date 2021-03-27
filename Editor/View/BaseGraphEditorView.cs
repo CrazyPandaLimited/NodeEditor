@@ -36,6 +36,11 @@ namespace CrazyPanda.UnityCore.NodeEditor
             get { return _graph; }
             set
             {
+                if( _graph != null )
+                {
+                    _graph.OnCustomSettingsChanged -= OnGraphSettingsChanged;
+                }
+                
                 _graph = value;
                 _graphView.LoadGraph( _graph );
 
@@ -43,8 +48,11 @@ namespace CrazyPanda.UnityCore.NodeEditor
                 {
                     _graph.CustomSettings = CreateGraphSettings();
                 }
+
+                OnGraphSettingsChanged( _graph.CustomSettings );
                 
                 _sGraphToGraphContentConverter.SetGraph( value );
+                _graph.OnCustomSettingsChanged += OnGraphSettingsChanged;
 
                 OnGraphLoaded();
             }
@@ -135,7 +143,7 @@ namespace CrazyPanda.UnityCore.NodeEditor
         {
             if( _graphSettingsView == null )
             {
-                _graphSettingsView = new TGraphSettingsView { Model = Graph };
+                _graphSettingsView = new TGraphSettingsView { Model = Graph.CustomSettings };
                 _overlayRoot.Add( _graphSettingsView );
             }
             else
@@ -183,9 +191,9 @@ namespace CrazyPanda.UnityCore.NodeEditor
         {
         }
 
-        protected virtual object CreateGraphSettings()
+        protected virtual IGraphSettings CreateGraphSettings()
         {
-            return null;
+            return default;
         }
         
         private void NodeSelectRequested( NodeCreationContext obj )
@@ -224,6 +232,16 @@ namespace CrazyPanda.UnityCore.NodeEditor
             }
 
             return true;
+        }
+        
+        private void OnGraphSettingsChanged( IGraphSettings graphSettings )
+        {
+            if( _graphSettingsView == null )
+            {
+                return;
+            }
+                    
+            _graphSettingsView.Model = graphSettings;
         }
     }
 }

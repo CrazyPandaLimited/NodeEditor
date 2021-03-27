@@ -10,9 +10,9 @@ namespace CrazyPanda.UnityCore.NodeEditor
         protected const string StylesLocationPath = "Styles/";
         protected const string UxmlStringProperty = "SettingsStringProperty";
 
-        private SGraph _model;
+        private IGraphSettings _model;
 
-        public SGraph Model
+        public IGraphSettings Model
         {
             get => _model;
             set
