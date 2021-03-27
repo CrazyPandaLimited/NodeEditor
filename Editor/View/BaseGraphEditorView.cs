@@ -17,9 +17,9 @@ namespace CrazyPanda.UnityCore.NodeEditor
             get => base.Graph;
             set
             {
-                if( _graph != null )
+                if( Graph != null )
                 {
-                    _graph.OnCustomSettingsChanged -= OnGraphSettingsChanged;
+                    Graph.OnCustomSettingsChanged -= OnGraphSettingsChanged;
                 }
 
                 if( value.CustomSettings == null )
@@ -73,7 +73,7 @@ namespace CrazyPanda.UnityCore.NodeEditor
         protected VisualElement _overlayRoot;
 
 
-        protected SGraph _graph { get; private set; }
+        private SGraph _graph;
 
         /// <summary>
         /// <see cref="GraphModel"/> that is displayed by this view
@@ -90,11 +90,6 @@ namespace CrazyPanda.UnityCore.NodeEditor
             {
                 _graph = value;
                 _graphView.LoadGraph( _graph );
-
-                if( _graph.CustomSettings == null )
-                {
-                    _graph.CustomSettings = CreateGraphSettings();
-                }
 
                 _sGraphToGraphContentConverter.SetGraph( value );
 
