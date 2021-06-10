@@ -74,7 +74,12 @@ namespace CrazyPanda.UnityCore.NodeEditor
             }
             else if( valueType.IsEnum )
             {
-                var popupField = new PopupField<string>( ObjectNames.NicifyVariableName( label ), Enum.GetNames( valueType ).ToList(), value.ToString() );
+                var enumValues = Enum.GetNames( valueType ).ToList();
+                if( enumValues.Count == 0 )
+                    throw new ArgumentException( $"\"{valueType}\" enum can not be without any items!" );
+
+                var defaultEnumValue = value.ToString();
+                var popupField = new PopupField<string>( ObjectNames.NicifyVariableName( label ), enumValues, enumValues.Contains( defaultEnumValue ) ? defaultEnumValue : enumValues[ 0 ] );
                 popupField.RegisterValueChangedCallback( v => setter( Enum.Parse( valueType, v.newValue ) ) );
                 return popupField;
             }
