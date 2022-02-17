@@ -64,7 +64,7 @@ namespace CrazyPanda.UnityCore.NodeEditor
             _graph = graph ?? throw new ArgumentNullException( nameof( graph ) );
             _graph.GraphChanged += OnGraphChanged;
 
-            _graphTypeLabel.text = graph.GraphType.Name.ToUpper();
+            _graphTypeLabel.text = graph.GraphType.Name.ToUpperInvariant();
 
             DeleteElements( graphElements.ToList() );
 
