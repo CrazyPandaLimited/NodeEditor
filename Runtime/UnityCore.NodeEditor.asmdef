@@ -1,3 +1,14 @@
 {
-	"name": "UnityCore.NodeEditor"
+    "name": "UnityCore.NodeEditor",
+    "references": [],
+    "includePlatforms": [],
+    "excludePlatforms": [],
+    "allowUnsafeCode": false,
+    "overrideReferences": true,
+    "precompiledReferences": [
+        "Newtonsoft.Json.dll"
+    ],
+    "autoReferenced": false,
+    "defineConstraints": [],
+    "noEngineReferences": false
 }
