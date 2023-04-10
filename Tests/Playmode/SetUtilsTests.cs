@@ -2,7 +2,6 @@
 
 namespace CrazyPanda.UnityCore.NodeEditor.Tests
 {
-    [ Category( "ModuleTests" ), Category( "LocalTests" ) ]
     class SetUtilsTests
     {
         [Test]

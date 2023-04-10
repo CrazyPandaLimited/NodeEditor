@@ -8,7 +8,6 @@ using UnityEngine.UIElements;
 
 namespace CrazyPanda.UnityCore.NodeEditor.Tests
 {
-    [ Category( "ModuleTests" ), Category( "LocalTests" ) ]
     class ObjectPropertiesFieldTests
     {
         // VisualElements must be attached to Panel to work correctly

@@ -4,8 +4,6 @@ using NUnit.Framework;
 
 namespace CrazyPanda.UnityCore.NodeEditor.Tests
 {
-    [ Category( "ModuleTests" ), Category( "LocalTests" ) ]
-
     class BaseNodeTypeTests
     {
         [TestCaseSource( nameof( _portsSource ) )]

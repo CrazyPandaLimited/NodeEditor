@@ -8,7 +8,6 @@ using UnityEngine.TestTools;
 
 namespace CrazyPanda.UnityCore.NodeEditor.Tests
 {
-    [ Category( "ModuleTests" ), Category( "LocalTests" ) ]
     class GraphModelExecutionTests
     {
         [Test]
